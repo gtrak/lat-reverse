@@ -2,7 +2,7 @@
 
 ## 1. Objective
 
-Decompose an existing codebase into invariant-driven concept graphs and reconstruct lat.md-compatible specifications. Work incrementally through a lifecycle `candidate → extracted → specified → audited`. Final artifacts are written into the project's existing `lat.md/`.
+Decompose an existing codebase into invariant-driven concept graphs and reconstruct lat.md-compatible specifications. Work incrementally through a lifecycle `candidate → extracted → specified → audited`. Final artifacts are written into the project's existing `lat.md/`, with `@lat:` annotations added to source files for bidirectional traceability.
 
 Explicitly exclude implementation details, control flow, and data structures. Every statement must survive a full rewrite of the implementation.
 
@@ -23,7 +23,7 @@ Explicitly exclude implementation details, control flow, and data structures. Ev
 <source_repo>/lat.md/              # existing lat.md docs (final destination)
 ```
 
-Can live in-repo or out-of-repo (separate git repo pointed at the source via `--src`).
+`.lat-reverse/` lives inside the source repo. Out-of-repo operation (separate git repo for `.lat-reverse/`) is deferred to a future version.
 
 ---
 
@@ -32,7 +32,7 @@ Can live in-repo or out-of-repo (separate git repo pointed at the source via `--
 ```json
 {
   "version": 1,
-  "source_repo": "../",
+  "source_repo": ".",
   "concepts": {
     "c_playfield": {
       "name": "Grid-Based Playfield",
@@ -41,11 +41,9 @@ Can live in-repo or out-of-repo (separate git repo pointed at the source via `--
       "edges": {
         "depends_on": [],
         "refines": [],
-        "interacts_with": ["c_game_lifecycle"],
         "constrains": ["c_tetromino_shapes"]
       },
-      "source_sha": "a1b2c3d",
-      "lat_snapshot": "f7g8h9i"
+      "source_sha": "a1b2c3d"
     }
   }
 }
@@ -54,23 +52,17 @@ Can live in-repo or out-of-repo (separate git repo pointed at the source via `--
 ### Field Definitions
 
 - **`version`**: Schema version for future migration support.
-- **`source_repo`**: Path to the project being analyzed. Set by `--src` flag (default `../`). Supports in-repo (`.`) or out-of-repo (absolute/relative path to a separate project).
+- **`source_repo`**: Path to the project being analyzed. Set by `lat-rev init --src-dir` (default `.`). All `lat` commands invoked by the workflow use `--dir <source_repo>` or `cwd = source_repo` to operate on the correct project.
 - **`concepts`**: Reconstructed concepts from the pipeline.
   - **`phase`**: Lifecycle stage. `candidate` = identified but not yet extracted. `extracted` = evidence gathered. `specified` = spec synthesized. `audited` = spec validated against code.
-  - **`source_files`**: Source files this concept was extracted from. Replaces the previous `origin` (unit indirection) — concepts reference files directly.
-  - **`edges`**: Graph relationships to other concepts. Four edge types: `depends_on`, `refines`, `interacts_with`, `constrains`.
-  - **`source_sha`**: Single git commit SHA of the source repo at time of last reconstruction (`git rev-parse HEAD`). Used for drift detection. Compare against current HEAD; if different, run `git diff <stored_sha> HEAD -- <source_files>` to identify which files changed.
-  - **`lat_snapshot`**: Git tree SHA of `lat.md/` directory at time of last `/integrate` (`git rev-parse HEAD:lat.md/`). Used to: (1) warn if lat.md/ has uncommitted changes at `/integrate` time, (2) diff against stored snapshot on next `/integrate` to detect manual edits to integrated docs.
-
-### SHA Strategy
-
-- **`source_sha`**: Single commit SHA from source repo via `git rev-parse HEAD`.
-- **`lat_snapshot`**: Git tree SHA of `lat.md/` directory via `git rev-parse HEAD:lat.md/`.
-- **Uncommitted files**: CLI warns ("N files uncommitted, snapshots may be inaccurate"), proceeds with HEAD SHAs.
+  - **`source_files`**: Source files this concept was extracted from. Concepts reference files directly.
+  - **`edges`**: Graph relationships to other concepts. Three edge types: `depends_on`, `refines`, `constrains`.
+  - **`source_sha`**: Single git commit SHA of the source repo at time of last reconstruction (`git rev-parse HEAD`). Used for drift detection. Compare against current HEAD; if different, report which source files changed.
+- **`lat_snapshot`**: Removed. Relied on `lat check` for integrity verification post-integrate instead.
 
 ### Drift Detection
 
-Compare stored `source_sha` against current `git rev-parse HEAD` in the source repo. If different, the concept is stale. Run `git diff <stored_sha> HEAD -- <source_files>` to show which files changed. The user decides whether to re-reconstruct on a case-by-case basis.
+Compare stored `source_sha` against current `git rev-parse HEAD` in the source repo. If different, the concept is stale. Report which `source_files[]` changed using `git diff --name-only <stored_sha> HEAD -- <source_files>`. The user decides whether to re-reconstruct on a case-by-case basis. The CLI does not auto-run full diffs or attempt focused reconstruction.
 
 ---
 
@@ -99,12 +91,16 @@ Each phase of `/reconstruct` runs in an isolated subagent context. No shared con
 - Implementation-specific terminology
 
 **Compression rules**:
-- Max ~5 bullets per section
+- Max ~5 bullets per section (soft target, not a hard limit)
 - Merge overlapping claims
 - Remove redundancy aggressively
 - No vague language ("handles errors", "works correctly")
 
 **Source code wiki link restriction**: `[[src/file.ts#symbol]]` links are allowed only in the `Related` section of a spec. Banned from Purpose, Invariants, Constraints, and Rationale — these sections must be implementation-agnostic.
+
+**Placeholder wiki links**: When a spec references a concept not yet integrated into `lat.md/`, write the link as `[[?concept-id]]`. These placeholders are resolved during `/integrate` when their targets become available. Unresolved placeholders remain as `[[?...]]` and will surface as `lat check md` failures, signaling that a concept needs documenting.
+
+**`@lat:` source annotations**: `/integrate` writes `// @lat: [[lat.md/path#Concept]]` annotations into source files at relevant symbol locations. Language-appropriate comment prefix (`//` for TS/JS/Go, `#` for Python/Rust). Verified via `lat check code-refs` post-integrate.
 
 **Concept lifecycle**:
 ```
@@ -112,13 +108,13 @@ candidate → extracted → specified → audited
 ```
 Progression requires the prerequisite artifact to exist and be approved by the user. Re-running `/reconstruct` on an already-audited concept restarts from scratch (extraction phase). Feedback is provided during review gates — no separate `/revise` command.
 
-**Edge updates**: During `/reconstruct`, if new relationships between concepts emerge, update edges via `lat-rev concept edge`.
+**Edge updates**: During `/reconstruct`, if new relationships between concepts emerge, update edges via `lat-rev concept edge`. Three edge types: `depends_on`, `refines`, `constrains`.
 
 ### 4.2 `lat-style`
 
 Formatting rules from lat.md, enforced on all output specs.
 
-**Section structure**: Every section must have a leading paragraph ≤250 characters (excluding `[[wiki link]]` content) before any child headings.
+**Section structure**: Every section should have a leading paragraph of reasonable length (soft target, not a hard limit) before any child headings.
 
 **Required sections** for each concept spec:
 - `## Purpose` — what this concept guarantees
@@ -130,6 +126,7 @@ Formatting rules from lat.md, enforced on all output specs.
 
 **Wiki link syntax**:
 - Section refs: `[[file#Section#SubSection]]`
+- Placeholder refs: `[[?concept-id]]` (resolved during `/integrate`)
 - Source code refs: `[[src/auth.ts#validateToken]]`
 
 **Rules**:
@@ -168,7 +165,7 @@ Walk the full per-concept pipeline: extraction → spec → audit. Each phase ru
 | | |
 |---|---|
 | **Input** | `$1`: concept_id (any phase; if already `audited`, restarts from extraction) |
-| **Reads** | Source files from concept's `source_files`. If stale: `lat-rev drift <concept_id>` to show what changed. |
+| **Reads** | Source files from concept's `source_files`. If stale: `lat-rev drift <concept_id>` to show which files changed. |
 | **Writes** | `.lat-reverse/concepts/$1/extraction.md`, `spec.md`, `audit.md`. Updates `state.json` (phase, `source_sha`). |
 | **Output** | Three artifacts presented sequentially for review via `question` tool at each phase boundary. |
 
@@ -180,7 +177,8 @@ Walk the full per-concept pipeline: extraction → spec → audit. Each phase ru
 **Phase 2 — Synthesis** (ROLE: Synthesizer, isolated subagent):
 - Produce lat-style spec from extraction: Purpose, Non-goals, Invariants, Constraints, Rationale.
 - Exclude implementation details. Validate "survives rewrite" constraint.
-- Compress: ~5 bullets/section max, merge overlapping claims, remove vague language.
+- Compress: ~5 bullets/section (soft target), merge overlapping claims, remove vague language.
+- Use `[[?concept-id]]` placeholders for references to not-yet-integrated concepts.
 - Write to `spec.md`. Present for user review. Promote to `specified` after user approves.
 
 **Phase 3 — Audit** (ROLE: Auditor, isolated subagent):
@@ -190,33 +188,41 @@ Walk the full per-concept pipeline: extraction → spec → audit. Each phase ru
 - Write to `audit.md`. Present for user review. Promote to `audited` after user approves.
 
 **Stale concept handling**: When re-running on a concept whose `source_sha` doesn't match current git HEAD:
-- Show the diff via `git diff <stored_sha> HEAD -- <source_files>`.
-- Focus reconstruction on changed areas rather than starting from scratch.
+- Show which source files changed via `lat-rev drift <concept_id>`.
+- The user decides whether to re-read changed files or do a full reconstruction.
 - Record new `source_sha` on completion.
 
 **Review gate behavior**: At each phase boundary, present the artifact and ask: approve / provide feedback. If feedback is given, re-run that phase in a fresh subagent with the feedback incorporated. No separate `/revise` command — feedback is handled inline.
 
 ### 5.3 `/integrate [$1]`
 
-Write audited concepts into the project's `lat.md/`. Create or edit sections based on per-section overlap detection.
+Write audited concepts into the project's `lat.md/`. Create or edit sections based on overlap detection. Annotate source files with `@lat:` references.
 
 | | |
 |---|---|
 | **Input** | `$1`: optional concept_id (default: all audited concepts) |
-| **Reads** | All audited concepts' `spec.md`. Project's `lat.md/` directory. `lat locate <concept_name>` per concept for overlap discovery, plus independent per-section comparison. |
-| **Writes** | `lat.md/<file>.md` — creates or edits sections. Updates `lat_snapshot` per concept in `state.json`. |
-| **Output** | Summary: which concepts were new (created), which overlapped (merged), any `lat check` errors needing manual resolution. |
+| **Reads** | All audited concepts' `spec.md`. Project's `lat.md/` directory. Overlap detection results. |
+| **Writes** | `lat.md/<file>.md` — creates or edits sections. Source file `@lat:` annotations. |
+| **Output** | Summary: which concepts were new (created), which overlapped (presented to user for resolution), placeholder resolution results, any `lat check` errors needing manual resolution. |
 
-**Overlap detection**: Use `lat locate` for initial discovery, then do independent per-section comparison. Present candidate matches to user for confirmation ("Is this the same concept?") before merging.
+**Overlap detection** (three layers, inconsistencies highlighted):
 
-**Per-section overlap merge**: For each of the 6 required spec sections, compare new spec content against existing lat.md content:
+1. **`lat locate`** — name-based match against existing sections.
+2. **`lat search`** (if embedding DB is configured) — semantic match for concepts with different names but overlapping meaning.
+3. **Explore subagent** — reads matched sections from layers 1-2, compares claims against the new spec, produces a report: which claims match, which diverge, which are missing from each side.
 
-| New spec section | Existing content | Action |
-|---|---|---|
-| Not present in existing | N/A | Append as new subsection |
-| Present, claims match | Keep existing | No change |
-| Present, claims diverge | Both versions shown | Flag for user resolution |
-| Present, existing is subset | Add missing claims | Preserve existing, append new |
+If layers disagree (e.g., `lat locate` finds no match but `lat search` does, or the explore subagent finds the overlap is only partial), highlight the inconsistency. Present the overlap report to the user. **No auto-merge** — always present both versions and let the user decide how to resolve.
+
+**Source annotation**: For each concept being integrated, write `@lat:` annotations into the source files listed in `source_files`:
+1. Identify the primary symbol(s) related to this concept.
+2. Insert `// @lat: [[lat.md/path#Concept#Section]]` (or `# @lat:` for Python/Rust) at the symbol's line.
+3. Verify with `lat check code-refs` post-integrate.
+
+**Placeholder resolution**: After all concepts in the batch are written to `lat.md/`:
+1. Scan all integrated files for `[[?...]]` placeholders.
+2. Check if the target section now exists via `lat locate`.
+3. Resolve `[[?concept-id]]` → `[[concept-id]]` where possible.
+4. Remaining `[[?...]]` placeholders stay unresolved — they surface as `lat check md` failures, signaling that a concept needs documenting.
 
 **Preservation rules**:
 - Never delete existing wiki links from sections being edited.
@@ -230,7 +236,7 @@ Write audited concepts into the project's `lat.md/`. Create or edit sections bas
 4. If index file doesn't exist, create it with proper format: each entry is `- [[name]] — description`.
 5. Run `lat check index` to verify.
 
-**Post-merge**: Always run `lat check`. Report any errors for manual resolution. Record `lat_snapshot` per concept in state. Warn if lat.md/ has uncommitted changes at integration time.
+**Post-integrate**: Always run `lat check`. Report any errors (unresolved placeholders, broken links, invalid code refs) for manual resolution.
 
 ### 5.4 `/next [$1]`
 
@@ -241,12 +247,12 @@ Write audited concepts into the project's `lat.md/`. Create or edit sections bas
 | **Input** | `$1`: optional concept_id |
 | **Reads** | `state.json`. `lat-rev drift` for stale concept detection. |
 | **Writes** | None |
-| **Output** | If no arg: phase summary (count per phase) + drift report (stale concepts) + recommended next command. If arg: that concept's phase + next step. |
+| **Output** | If no arg: phase summary (count per phase) + drift report (stale concepts with changed files) + recommended next command. If arg: that concept's phase + next step. |
 
 Example output (no arg):
 ```
 Phase: candidate(3) extracted(1) specified(2) audited(1)
-2 concepts STALE: c_playfield, c_tetromino_shapes
+2 concepts STALE: c_playfield (src/board.ts), c_tetromino_shapes (src/pieces.ts)
 Recommended: /reconstruct c_playfield (source changed since last extraction)
 ```
 
@@ -259,40 +265,43 @@ c_playfield → specified → Next: /reconstruct c_playfield will run audit phas
 
 ## 6. CLI (`lat-rev`)
 
-A small TypeScript CLI at `.lat-reverse/bin/lat-rev.ts` for state management. Commands delegate state operations to this CLI instead of manipulating `state.json` directly in prompt text.
+A small TypeScript CLI at `.lat-reverse/bin/lat-rev.ts` for state operations that require git or cross-command coordination. The agent manipulates `state.json` directly for concept CRUD (add, promote, field updates) — only operations with non-trivial logic live in the CLI.
 
 ### Commands
 
 ```
-# Concepts
-lat-rev concept add <id> <name> --files f1,f2
-lat-rev concept edge <id> depends_on other_id
-lat-rev concept promote <id>
+# Init
+lat-rev init [--src-dir <path>]              # create .lat-reverse/ + state.json
+
+# Concepts (edge validation)
+lat-rev concept edge <id> depends_on other_id   # validate + update edges
 
 # Query
-lat-rev status
-lat-rev graph
-lat-rev next [concept_id]
+lat-rev status                                # phase counts + stale concepts
+lat-rev status <concept_id>                   # single concept status + next step
 
 # Drift
-lat-rev drift                                 # report all stale concepts
-lat-rev drift <concept_id>                    # show source diff for one concept
-lat-rev snapshot <concept_id>                  # record current source SHA
+lat-rev drift                                 # report all stale concepts + changed files
+lat-rev drift <concept_id>                    # show changed files for one concept
+lat-rev snapshot <concept_id>                 # record current source SHA
 ```
 
 ### Global options
 
 ```
-lat-rev --src <path>   # override source_repo (default: read from state.json)
 lat-rev --json         # machine-readable output for agent consumption
 ```
+
+### State write safety
+
+All writes to `state.json` are atomic: write to `state.json.tmp` then rename. Prevents corruption on crash.
 
 ---
 
 ## 7. Install Script
 
 ```
-bun run install.ts --mode project|global [--src /path/to/source]
+bun run install.ts --mode project|global [--src-dir /path/to/source]
 ```
 
 ### What it creates
@@ -301,7 +310,7 @@ bun run install.ts --mode project|global [--src /path/to/source]
    - `.opencode/skills/lat-reconstruction/SKILL.md`
    - `.opencode/skills/lat-style/SKILL.md`
 
-2. **Commands** (4) with detailed prompts calling `lat-rev` for state ops
+2. **Commands** (4) with detailed prompts
    - `.opencode/commands/split.md`
    - `.opencode/commands/reconstruct.md`
    - `.opencode/commands/integrate.md`
@@ -309,7 +318,7 @@ bun run install.ts --mode project|global [--src /path/to/source]
 
 3. **CLI** at `.lat-reverse/bin/lat-rev.ts`
 
-4. **State** at `.lat-reverse/state.json` with schema initialized and `source_repo` configured
+4. **State** at `.lat-reverse/state.json` with schema initialized and `source_repo` configured from `--src-dir`
 
 5. **Directory** `.lat-reverse/concepts/`
 
@@ -320,12 +329,11 @@ bun run install.ts --mode project|global [--src /path/to/source]
 - **`--mode global`**: Skills + commands + CLI go to `~/.config/opencode/`. State (`.lat-reverse/`) stays per-project.
 - **`--mode project`**: Everything in `.opencode/` + `.lat-reverse/` in project root.
 
-### `--src` flag
+### `--src-dir` flag
 
-- Optional, defaults to `../` (assumes lat-reverse is a sibling of the project).
-- In-repo: `--src .` (when `.lat-reverse/` is inside the project).
-- Out-of-repo: `--src /absolute/path/to/project`.
+- Optional, defaults to `.` (current directory, assuming in-repo).
 - Written into `state.json` as `source_repo`.
+- All `lat` commands invoked by the workflow use this path as the project root.
 
 ---
 
@@ -372,41 +380,29 @@ bun run install.ts --mode project
 
 # Eventually all concepts are audited
 /integrate
-# → lat locate finds no overlap for any concept
+# → overlap detection: lat locate + lat search + explore subagent → no overlaps found
 # → creates lat.md/playfield.md, lat.md/row-clearing.md, etc.
+# → writes @lat: annotations into source files
+# → resolves [[?...]] placeholders (all resolved in this case)
 # → updates directory index files
 # → runs lat check — passes
-# → summarizes: "Created 5 new sections, modified 0 existing sections"
+# → summarizes: "Created 5 new sections, modified 0 existing sections, 5 source annotations added"
 
 # Later: code changes
 /next
-# → 2 concepts STALE: c_playfield (source_sha differs), c_row_clearing (source_sha differs)
+# → 2 concepts STALE: c_playfield (src/board.ts), c_row_clearing (src/pieces.ts)
 # Recommended: /reconstruct c_playfield
 
 /reconstruct c_playfield
-# → shows diff: "row clearing logic moved to src/clearing.ts"
-# → focused reconstruction on what changed
+# → shows changed files: "src/board.ts changed"
+# → user reviews and re-reconstructs
 # → audit finds new invariant: "Clearing is now async"
 
 /integrate c_playfield
-# → per-section overlap merge with existing lat.md/playfield.md
+# → overlap detection: lat locate finds existing lat.md/playfield.md
+# → explore subagent compares: existing missing new invariant, existing has stale invariant
+# → presents both versions, user decides
 # → lat check passes
-```
-
-### Out-of-repo walkthrough
-
-```
-mkdir tetris-docs && cd tetris-docs
-git init
-bun run /path/to/lat-reverse/install.ts --mode project --src ~/dev/tetris
-
-/split
-/reconstruct c_playfield
-/integrate
-# → writes into ~/dev/tetris/lat.md/
-
-git add . && git commit -m "reconstruct playfield concept"
-# state is committed in tetris-docs repo, separately from the tetris source
 ```
 
 ---
@@ -415,7 +411,7 @@ git add . && git commit -m "reconstruct playfield concept"
 
 ### Code changes after reconstruction
 
-Drift detection via `source_sha` comparison. The user is notified of stale concepts via `/next` and `lat-rev drift`. Re-reconstructing a stale concept shows the diff and focuses on changes rather than starting from scratch. The user decides case-by-case whether to re-reconstruct.
+Drift detection via `source_sha` comparison. The user is notified of stale concepts (with changed file list) via `/next` and `lat-rev drift`. The user decides case-by-case whether to re-reconstruct.
 
 ### Cross-concept invariants
 
@@ -425,9 +421,17 @@ Some invariants span multiple concepts (e.g., "every request must be authenticat
 
 Both approaches are valid. The CLI supports edge annotations; the agent prompt instructs it to capture cross-concept invariants on edges when detected.
 
+### Forward references and placeholder links
+
+Specs may reference concepts not yet integrated. These are written as `[[?concept-id]]` placeholders. The `/integrate` command resolves placeholders whose targets now exist. Remaining placeholders are valid `lat check md` failures that signal gaps in the documentation.
+
+### Source file annotations
+
+`@lat:` annotations create bidirectional traceability between code and specs. `lat check code-refs` verifies these annotations. `lat refs <section>` can then show both incoming markdown links and source code back-references.
+
 ### Concept naming collisions
 
-The CLI enforces unique IDs. The agent prompt instructs disambiguation when two scopes produce candidates with the same name.
+The agent enforces unique IDs. Disambiguate when two scopes produce candidates with the same name.
 
 ### `.lat-reverse/` and git
 
@@ -436,3 +440,7 @@ Pipeline progress should be committed. `state.json` and `concepts/*/` are durabl
 ### Uncommitted files
 
 The CLI warns when computing snapshots against uncommitted files. The user is responsible for committing before relying on drift detection accuracy.
+
+### Semantic search
+
+When `lat search` is configured (embedding DB available), `/integrate` uses it as a second layer of overlap detection. When not configured, only `lat locate` and the explore subagent are used.
