@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import { mkdirSync, writeFileSync, existsSync, readFileSync } from "fs";
-import { join } from "path";
+import { mkdirSync, writeFileSync, existsSync, readFileSync, copyFileSync } from "fs";
+import { join, resolve } from "path";
 
 type Mode = "project" | "global";
 
@@ -12,14 +12,16 @@ function getArg(flag: string): string | undefined {
 }
 
 const mode: Mode = (getArg("--mode") as Mode) || "project";
+const srcDir = getArg("--src-dir") || ".";
 const force = args.includes("--force");
 
-const targetDir =
+const projectRoot = process.cwd();
+const opencodeDir =
   mode === "global"
     ? join(process.env.HOME || "~", ".opencode")
-    : join(process.cwd(), ".opencode");
-
-const rootDir = mode === "global" ? targetDir : process.cwd();
+    : join(projectRoot, ".opencode");
+const latReverseDir = join(projectRoot, ".lat-reverse");
+const scriptDir = resolve(import.meta.dir || ".");
 
 function ensureDir(path: string) {
   if (!existsSync(path)) mkdirSync(path, { recursive: true });
@@ -27,278 +29,140 @@ function ensureDir(path: string) {
 
 function writeFileSafe(path: string, content: string) {
   if (existsSync(path) && !force) {
-    console.log(`skip (exists): ${path}`);
+    console.log(`  skip (exists): ${path}`);
     return;
   }
   writeFileSync(path, content);
-  console.log(`write: ${path}`);
+  console.log(`  write: ${path}`);
 }
 
 function mergeJSON(path: string, content: object) {
   if (!existsSync(path)) {
-    writeFileSync(path, JSON.stringify(content, null, 2));
-    console.log(`write: ${path}`);
+    writeFileSync(path, JSON.stringify(content, null, 2) + "\n");
+    console.log(`  write: ${path}`);
     return;
   }
 
   try {
     const existing = JSON.parse(readFileSync(path, "utf-8"));
     const merged = { ...existing, ...content };
-    writeFileSync(path, JSON.stringify(merged, null, 2));
-    console.log(`merge: ${path}`);
+    writeFileSync(path, JSON.stringify(merged, null, 2) + "\n");
+    console.log(`  merge: ${path}`);
   } catch {
-    console.log(`skip (invalid json): ${path}`);
+    console.log(`  skip (invalid json): ${path}`);
   }
 }
 
-console.log(`Installing LAT workflow (${mode}) → ${targetDir}`);
-
-////////////////////////////////////////
-// DIRECTORIES
-////////////////////////////////////////
-
-ensureDir(join(targetDir, "commands"));
-ensureDir(join(targetDir, "skills/lat-reconstruction"));
-ensureDir(join(targetDir, "skills/lat-style"));
-
-////////////////////////////////////////
-// SKILLS
-////////////////////////////////////////
-
-writeFileSafe(
-  join(targetDir, "skills/lat-reconstruction/SKILL.md"),
-`---
-name: lat-reconstruction
-description: Reconstruct codebases into invariant-driven concept graphs
-compatibility: opencode
----
-
-## Roles
-
-Extractor: evidence only  
-Synthesizer: intent, no implementation  
-Auditor: contradictions only  
-
-## Rule
-
-All statements must survive full rewrite.
-
-## Never include
-
-- control flow
-- data structures
-- function names
-
-## Prefer
-
-- invariants
-- constraints
-- rationale
-
-## Compression
-
-Max ~5 bullets per section.
-`
-);
-
-writeFileSafe(
-  join(targetDir, "skills/lat-style/SKILL.md"),
-`---
-name: lat-style
-description: Enforce lat.md formatting
-compatibility: opencode
----
-
-## Format
-
-# Concept
-
-## Purpose
-## Non-goals
-## Invariants
-## Constraints
-## Rationale
-## Related
-
-## Rules
-
-- no "how"
-- no implementation details
-- no vague language
-
-## Compression
-
-Remove redundancy aggressively.
-`
-);
-
-////////////////////////////////////////
-// COMMAND TEMPLATE HELPER
-////////////////////////////////////////
-
-function cmd(name: string, body: string) {
-  return `---
-description: ${name}
----
-
-${body}
-`;
+function copySkillOrCommand(srcDir: string, destDir: string, name: string) {
+  const src = join(srcDir, name);
+  if (!existsSync(src)) {
+    console.log(`  skip (not found): ${src}`);
+    return;
+  }
+  ensureDir(destDir);
+  const dest = join(destDir, name);
+  if (existsSync(dest) && !force) {
+    console.log(`  skip (exists): ${dest}`);
+    return;
+  }
+  const content = readFileSync(src, "utf-8");
+  writeFileSync(dest, content);
+  console.log(`  write: ${dest}`);
 }
 
-////////////////////////////////////////
-// COMMANDS
-////////////////////////////////////////
-
-const commands: Record<string, string> = {
-  "split.md": cmd("split", `
-Use lat-reconstruction skill.
-
-Split input into analysis units.
-Over-split. One responsibility per unit.
-
-Output:
-- unit_id
-- description
-- files
-`),
-
-  "extract-concepts.md": cmd("extract-concepts", `
-Use lat-reconstruction skill.
-
-Extract conceptual responsibilities.
-
-Rules:
-- not file names
-- not types
-
-Output:
-- concept_id
-- name
-- evidence
-`),
-
-  "merge-concepts.md": cmd("merge-concepts", `
-Use lat-reconstruction skill.
-
-Propose merges and renames only.
-`),
-
-  "link-concepts.md": cmd("link-concepts", `
-Use lat-reconstruction skill.
-
-Infer relationships:
-- depends_on
-- refines
-- interacts_with
-
-Output JSON.
-`),
-
-  "extract-evidence.md": cmd("extract-evidence", `
-ROLE: Extractor
-
-Extract:
-- responsibilities
-- invariants (with evidence)
-- failures
-
-No interpretation.
-`),
-
-  "synthesize-spec.md": cmd("synthesize-spec", `
-Use lat-style + lat-reconstruction.
-
-ROLE: Synthesizer
-
-Produce:
-- Purpose
-- Non-goals
-- Invariants
-- Constraints
-- Rationale
-
-No implementation details.
-`),
-
-  "compress-spec.md": cmd("compress-spec", `
-Use lat-style.
-
-Reduce redundancy.
-`),
-
-  "audit.md": cmd("audit", `
-ROLE: Auditor
-
-Find:
-- violated invariants
-- undocumented behavior
-
-Classify:
-- bug
-- spec_error
-`),
-
-  "status.md": cmd("status", `
-Show concept statuses.
-`),
-
-  "show.md": cmd("show", `
-Show artifact for concept.
-`),
-
-  "revise.md": cmd("revise", `
-Replace artifact and invalidate downstream.
-`),
-
-  "promote.md": cmd("promote", `
-Advance phase if valid.
-`),
-
-  "emit-lat.md": cmd("emit-lat", `
-Use lat-style.
-
-Emit final lat.md node.
-`),
-
-  "lint-spec.md": cmd("lint-spec", `
-Use lat-style.
-
-Reject:
-- implementation leakage
-- vague statements
-`)
-};
-
-for (const [file, content] of Object.entries(commands)) {
-  writeFileSafe(join(targetDir, "commands", file), content);
-}
+console.log(`Installing LAT reverse workflow (${mode})\n`);
 
 ////////////////////////////////////////
-// STATE
+// 1. Skills
 ////////////////////////////////////////
 
-writeFileSafe(
-  join(targetDir, "state.json"),
-  JSON.stringify({
-    concepts: {},
-    units: {},
-    graph: {}
-  }, null, 2)
+console.log("Skills:");
+ensureDir(join(opencodeDir, "skills/lat-reconstruction"));
+ensureDir(join(opencodeDir, "skills/lat-style"));
+
+copySkillOrCommand(
+  join(scriptDir, "skills/lat-reconstruction"),
+  join(opencodeDir, "skills/lat-reconstruction"),
+  "SKILL.md"
+);
+copySkillOrCommand(
+  join(scriptDir, "skills/lat-style"),
+  join(opencodeDir, "skills/lat-style"),
+  "SKILL.md"
 );
 
 ////////////////////////////////////////
-// CONFIG (project only)
+// 2. Commands
 ////////////////////////////////////////
 
-if (mode === "project") {
-  mergeJSON(
-    join(rootDir, "opencode.json"),
-    {
-      permission: {
-        skill: { "*": "allow" }
-      }
-    }
+console.log("\nCommands:");
+ensureDir(join(opencodeDir, "commands"));
+
+for (const cmd of ["split.md", "reconstruct.md", "integrate.md", "next.md"]) {
+  copySkillOrCommand(
+    join(scriptDir, "commands"),
+    join(opencodeDir, "commands"),
+    cmd
   );
 }
 
-console.log("Done.");
+////////////////////////////////////////
+// 3. CLI
+////////////////////////////////////////
+
+console.log("\nCLI:");
+ensureDir(join(latReverseDir, "bin"));
+
+const cliSrc = join(scriptDir, "bin/lat-rev.ts");
+const cliDest = join(latReverseDir, "bin/lat-rev.ts");
+if (existsSync(cliSrc)) {
+  if (existsSync(cliDest) && !force) {
+    console.log(`  skip (exists): ${cliDest}`);
+  } else {
+    copyFileSync(cliSrc, cliDest);
+    console.log(`  write: ${cliDest}`);
+  }
+} else {
+  console.log(`  skip (not found): ${cliSrc}`);
+}
+
+////////////////////////////////////////
+// 4. State
+////////////////////////////////////////
+
+console.log("\nState:");
+ensureDir(join(latReverseDir, "concepts"));
+
+const statePath = join(latReverseDir, "state.json");
+if (existsSync(statePath) && !force) {
+  console.log(`  skip (exists): ${statePath}`);
+} else {
+  writeFileSync(
+    statePath,
+    JSON.stringify(
+      {
+        version: 1,
+        source_repo: resolve(srcDir),
+        concepts: {},
+      },
+      null,
+      2
+    ) + "\n"
+  );
+  console.log(`  write: ${statePath}`);
+}
+
+////////////////////////////////////////
+// 5. Config (project only)
+////////////////////////////////////////
+
+if (mode === "project") {
+  console.log("\nConfig:");
+  mergeJSON(join(projectRoot, "opencode.json"), {
+    permission: {
+      skill: { "*": "allow" },
+    },
+  });
+}
+
+console.log("\nDone.");
