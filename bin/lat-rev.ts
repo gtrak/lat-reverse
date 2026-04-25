@@ -153,7 +153,9 @@ function cmdInit() {
 }
 
 function cmdConceptEdge() {
-  const [_, conceptId, edgeType, targetId] = cleanArgs;
+  const conceptId = cleanArgs[2];
+  const edgeType = cleanArgs[3];
+  const targetId = cleanArgs[4];
 
   if (!conceptId || !edgeType || !targetId) {
     console.error("usage: lat-rev concept edge <id> <edge_type> <target_id>");
