@@ -22,6 +22,10 @@ Read the extraction content provided to you (your only input — do NOT read sou
 
 Follow all lat-style rules. Compress: ~5 bullets/section (soft target), merge overlapping claims, remove vague language. Use `[[?concept-id]]` placeholders for references to not-yet-integrated concepts. Every statement must survive a full rewrite.
 
+## Subagent type
+
+`general` — reasons about extraction text to produce a spec, no code reading needed.
+
 ## Subagent prompt template
 
 When launching a synthesis subagent, include this in the prompt:

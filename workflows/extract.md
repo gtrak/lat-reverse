@@ -18,6 +18,10 @@ Read the concept's `source_files`. Extract:
 
 No interpretation, no intent inference. Evidence only.
 
+## Subagent type
+
+`explore` — reads source files and reports evidence.
+
 ## Subagent prompt template
 
 When launching an extraction subagent, include this in the prompt:

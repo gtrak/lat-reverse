@@ -13,7 +13,7 @@ Do NOT do extraction, synthesis, or audit work yourself. Each phase is a `Task` 
 ### Phase 1 — Extraction
 
 1. Read `.lat-reverse/workflows/extract.md` — it contains the subagent prompt template.
-2. Launch a `Task` explore subagent using the prompt template from the extract workflow. Fill in the concept's `source_files` and paste `reconstruction.md` content.
+2. Launch a `Task` subagent (type from `extract.md`) using the prompt template from the extract workflow. Fill in the concept's `source_files` and paste `reconstruction.md` content.
 3. Write the returned content to `.lat-reverse/concepts/<concept_id>/extraction.md`.
 4. **Review gate**: Output extraction as normal text. Use `question` tool: "Approve extraction?" with `Approve` / `I have feedback`. If feedback, re-launch with feedback in prompt.
 5. After approval, run `bun run .lat-reverse/bin/lat-rev.ts concept promote <concept_id> --phase extracted`.
@@ -21,7 +21,7 @@ Do NOT do extraction, synthesis, or audit work yourself. Each phase is a `Task` 
 ### Phase 2 — Synthesis
 
 1. Read `.lat-reverse/workflows/synthesize.md` — it contains the subagent prompt template.
-2. Launch a `Task` general subagent using the prompt template from the synthesize workflow. Fill in the extraction content inline and paste `reconstruction.md` + `style.md` content.
+2. Launch a `Task` subagent (type from `synthesize.md`) using the prompt template from the synthesize workflow. Fill in the extraction content inline and paste `reconstruction.md` + `style.md` content.
 3. Write the returned content to `.lat-reverse/concepts/<concept_id>/spec.md`.
 4. **Review gate**: Output spec as normal text. Use `question` tool: "Approve spec?" with `Approve` / `I have feedback`. If feedback, re-launch.
 5. After approval, run `bun run .lat-reverse/bin/lat-rev.ts concept promote <concept_id> --phase specified`.
@@ -29,7 +29,7 @@ Do NOT do extraction, synthesis, or audit work yourself. Each phase is a `Task` 
 ### Phase 3 — Audit
 
 1. Read `.lat-reverse/workflows/audit.md` — it contains the subagent prompt template and review gate options.
-2. Launch a `Task` explore subagent using the prompt template from the audit workflow. Fill in the spec content and source file paths, paste `reconstruction.md` content.
+2. Launch a `Task` subagent (type from `audit.md`) using the prompt template from the audit workflow. Fill in the spec content and source file paths, paste `reconstruction.md` content.
 3. Write the returned content to `.lat-reverse/concepts/<concept_id>/audit.md`.
 4. **Review gate**: Output audit as normal text, highlighting any findings.
    - If **no issues found**: promote immediately.

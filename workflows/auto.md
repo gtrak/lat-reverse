@@ -20,7 +20,7 @@ Explore the scope, identify concept candidates, add all of them via `bun run .la
 
 ### 2. Reconstruct all candidates (no review gates)
 
-For each concept with `phase: "candidate"`, run the full reconstruct pipeline. Use the subagent prompt templates from each phase workflow (`extract.md`, `synthesize.md`, `audit.md`). No review gates — auto-approve each phase.
+For each concept with `phase: "candidate"`, run the full reconstruct pipeline. Use the subagent prompt templates and subagent types from each phase workflow (`extract.md` → `explore`, `synthesize.md` → `general`, `audit.md` → `explore`). No review gates — auto-approve each phase.
 
 Auto-correct on audit: if audit found `bug` or `spec_error` findings, re-launch synthesis using the **auto-correct prompt template** from `synthesize.md` with the audit findings + original extraction. Write corrected spec. Re-run audit. Repeat until clean or only `undocumented_behavior` findings remain (max 3 cycles). Then promote.
 

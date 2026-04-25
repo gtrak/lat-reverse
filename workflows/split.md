@@ -26,6 +26,10 @@ Before proposing concepts, check existing state:
    - Covered by stale concepts → **flag** (suggest `/lat-rev-reconstruct <id>` instead of re-splitting)
    - No coverage → **propose new concepts**
 
+## Subagent type
+
+`explore` — surveys the codebase to identify responsibilities and relationships.
+
 ## Candidate format
 
 Each candidate has:

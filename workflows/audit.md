@@ -23,6 +23,10 @@ Classify each finding as:
 - `spec_error` — spec claims something false about the code
 - `undocumented_behavior` — code does something not covered by spec
 
+## Subagent type
+
+`explore` — reads spec + source files and compares them.
+
 ## Subagent prompt template
 
 When launching an audit subagent, include this in the prompt:

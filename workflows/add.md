@@ -4,6 +4,10 @@
 
 Identify a single concept from a specific file or small scope. Lighter than split — no pipeline-awareness, no drift checking. Just: look at this scope, propose one concept.
 
+## Subagent type
+
+`explore` — examines a file or small scope to identify a concept.
+
 ## Candidate format
 
 - `concept_id` — unique kebab-case ID
