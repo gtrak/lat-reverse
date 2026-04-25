@@ -13,7 +13,6 @@ function getArg(flag: string): string | undefined {
 
 const mode: Mode = (getArg("--mode") as Mode) || "project";
 const srcDir = getArg("--src-dir") || ".";
-const force = args.includes("--force");
 
 const projectRoot = process.cwd();
 const opencodeDir =
@@ -27,13 +26,14 @@ function ensureDir(path: string) {
   if (!existsSync(path)) mkdirSync(path, { recursive: true });
 }
 
-function writeFileSafe(path: string, content: string) {
-  if (existsSync(path) && !force) {
-    console.log(`  skip (exists): ${path}`);
+function copyFile(src: string, dest: string) {
+  if (!existsSync(src)) {
+    console.log(`  skip (not found): ${src}`);
     return;
   }
-  writeFileSync(path, content);
-  console.log(`  write: ${path}`);
+  ensureDir(resolve(dest, ".."));
+  copyFileSync(src, dest);
+  console.log(`  write: ${dest}`);
 }
 
 function mergeJSON(path: string, content: object) {
@@ -53,23 +53,6 @@ function mergeJSON(path: string, content: object) {
   }
 }
 
-function copySkillOrCommand(srcDir: string, destDir: string, name: string) {
-  const src = join(srcDir, name);
-  if (!existsSync(src)) {
-    console.log(`  skip (not found): ${src}`);
-    return;
-  }
-  ensureDir(destDir);
-  const dest = join(destDir, name);
-  if (existsSync(dest) && !force) {
-    console.log(`  skip (exists): ${dest}`);
-    return;
-  }
-  const content = readFileSync(src, "utf-8");
-  writeFileSync(dest, content);
-  console.log(`  write: ${dest}`);
-}
-
 console.log(`Installing LAT reverse workflow (${mode})\n`);
 
 ////////////////////////////////////////
@@ -77,67 +60,24 @@ console.log(`Installing LAT reverse workflow (${mode})\n`);
 ////////////////////////////////////////
 
 console.log("Workflows:");
-ensureDir(join(latReverseDir, "workflows"));
-
 for (const wf of ["lat-reconstruction.md", "lat-style.md", "split.md", "extract.md", "synthesize.md", "audit.md", "integrate.md"]) {
-  copySkillOrCommand(
-    join(scriptDir, "workflows"),
-    join(latReverseDir, "workflows"),
-    wf
+  copyFile(
+    join(scriptDir, "workflows", wf),
+    join(latReverseDir, "workflows", wf)
   );
 }
 
 console.log("\nCLI:");
-ensureDir(join(latReverseDir, "bin"));
-
-const cliSrc = join(scriptDir, "bin/lat-rev.ts");
-const cliDest = join(latReverseDir, "bin/lat-rev.ts");
-if (existsSync(cliSrc)) {
-  if (existsSync(cliDest) && !force) {
-    console.log(`  skip (exists): ${cliDest}`);
-  } else {
-    copyFileSync(cliSrc, cliDest);
-    console.log(`  write: ${cliDest}`);
-  }
-} else {
-  console.log(`  skip (not found): ${cliSrc}`);
-}
+copyFile(
+  join(scriptDir, "bin/lat-rev.ts"),
+  join(latReverseDir, "bin/lat-rev.ts")
+);
 
 console.log("\nState:");
 ensureDir(join(latReverseDir, "concepts"));
 
-////////////////////////////////////////
-// 2. Skills
-////////////////////////////////////////
-
-console.log("\nSkills:");
-ensureDir(join(opencodeDir, "skills/lat-reconstruction"));
-
-copySkillOrCommand(
-  join(scriptDir, "skills/lat-reconstruction"),
-  join(opencodeDir, "skills/lat-reconstruction"),
-  "SKILL.md"
-);
-
-////////////////////////////////////////
-// 3. Commands
-////////////////////////////////////////
-
-console.log("\nCommands:");
-ensureDir(join(opencodeDir, "commands"));
-
-for (const cmd of ["lat-rev-split.md", "lat-rev-reconstruct.md", "lat-rev-integrate.md", "lat-rev-next.md"]) {
-  copySkillOrCommand(
-    join(scriptDir, "commands"),
-    join(opencodeDir, "commands"),
-    cmd
-  );
-}
-
 const statePath = join(latReverseDir, "state.json");
-if (existsSync(statePath) && !force) {
-  console.log(`  skip (exists): ${statePath}`);
-} else {
+if (!existsSync(statePath)) {
   writeFileSync(
     statePath,
     JSON.stringify(
@@ -151,6 +91,30 @@ if (existsSync(statePath) && !force) {
     ) + "\n"
   );
   console.log(`  write: ${statePath}`);
+} else {
+  console.log(`  skip (exists, preserving): ${statePath}`);
+}
+
+////////////////////////////////////////
+// 2. Skills
+////////////////////////////////////////
+
+console.log("\nSkills:");
+copyFile(
+  join(scriptDir, "skills/lat-reconstruction/SKILL.md"),
+  join(opencodeDir, "skills/lat-reconstruction/SKILL.md")
+);
+
+////////////////////////////////////////
+// 3. Commands
+////////////////////////////////////////
+
+console.log("\nCommands:");
+for (const cmd of ["lat-rev-split.md", "lat-rev-reconstruct.md", "lat-rev-integrate.md", "lat-rev-next.md"]) {
+  copyFile(
+    join(scriptDir, "commands", cmd),
+    join(opencodeDir, "commands", cmd)
+  );
 }
 
 ////////////////////////////////////////
