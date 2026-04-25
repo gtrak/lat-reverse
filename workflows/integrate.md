@@ -2,8 +2,8 @@
 
 ## Context
 
-See `.lat-reverse/workflows/lat-reconstruction.md` for wiki link rules, `@lat:` annotation format, and edge types.
-See `.lat-reverse/workflows/lat-style.md` for section structure and formatting.
+See `.lat-reverse/workflows/reconstruction.md` for wiki link rules, `@lat:` annotation format, and edge types.
+See `.lat-reverse/workflows/style.md` for section structure and formatting.
 
 ## Goal
 

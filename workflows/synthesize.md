@@ -2,8 +2,8 @@
 
 ## Context
 
-See `.lat-reverse/workflows/lat-reconstruction.md` for roles, constraints, and wiki link rules.
-See `.lat-reverse/workflows/lat-style.md` for required sections, formatting, and compression rules.
+See `.lat-reverse/workflows/reconstruction.md` for roles, constraints, and wiki link rules.
+See `.lat-reverse/workflows/style.md` for required sections, formatting, and compression rules.
 
 ## Role: Synthesizer
 

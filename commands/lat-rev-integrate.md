@@ -4,7 +4,7 @@ description: Write audited concepts into the project's lat.md/ with overlap dete
 
 ## Orchestration
 
-Read `.lat-reverse/workflows/integrate.md` and `.lat-reverse/workflows/lat-style.md` for full context.
+Read `.lat-reverse/workflows/integrate.md` and `.lat-reverse/workflows/style.md` for full context.
 
 `$1`: optional concept_id (default: all audited concepts). Find them in `state.json` with `phase: "audited"`.
 

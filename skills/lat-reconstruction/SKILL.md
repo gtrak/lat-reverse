@@ -10,8 +10,8 @@ All workflow files live in `.lat-reverse/workflows/`:
 
 | Workflow | Purpose | When |
 |---|---|---|
-| `lat-reconstruction.md` | Shared rules: roles, constraints, wiki links, lifecycle, edge types | Loaded by all other workflows |
-| `lat-style.md` | Shared formatting: required sections, compression, wiki link syntax | Loaded by synthesize + integrate |
+| `reconstruction.md` | Shared rules: roles, constraints, wiki links, lifecycle, edge types | Loaded by all other workflows |
+| `style.md` | Shared formatting: required sections, compression, wiki link syntax | Loaded by synthesize + integrate |
 | `split.md` | Decompose codebase into concept candidates | User runs `/lat-rev-split` or asks to identify concepts |
 | `extract.md` | Extract evidence-backed facts from source (Extractor role) | Phase 1 of `/lat-rev-reconstruct` |
 | `synthesize.md` | Produce lat-style spec from extraction (Synthesizer role) | Phase 2 of `/lat-rev-reconstruct` |
