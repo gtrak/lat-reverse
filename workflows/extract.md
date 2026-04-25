@@ -10,7 +10,7 @@ You may only report observable behavior, code evidence, and failure modes. You m
 
 ## Task
 
-Read the concept's `source_files` from `state.json`. Extract:
+Read the concept's `source_files`. Extract:
 
 - **Responsibilities** — observable behavior of the concept
 - **Invariants** — statements that always hold, with code evidence + line refs
@@ -20,4 +20,4 @@ No interpretation, no intent inference. Evidence only.
 
 ## Output
 
-Write to `.lat-reverse/concepts/<concept_id>/extraction.md`.
+Return the full extraction as text in your final message. The orchestrator will write it to `.lat-reverse/concepts/<concept_id>/extraction.md`.

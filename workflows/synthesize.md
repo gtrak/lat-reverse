@@ -11,7 +11,7 @@ You may only state purpose, invariants, constraints, and rationale. You must NOT
 
 ## Task
 
-Read `.lat-reverse/concepts/<concept_id>/extraction.md` (the only input — do NOT read source code). Produce a lat-style spec with these sections:
+Read the extraction content provided to you (your only input — do NOT read source code). Produce a lat-style spec with these sections:
 
 - `## Purpose` — what this concept guarantees
 - `## Non-goals` — what it explicitly does not cover
@@ -24,4 +24,4 @@ Follow all lat-style rules. Compress: ~5 bullets/section (soft target), merge ov
 
 ## Output
 
-Write to `.lat-reverse/concepts/<concept_id>/spec.md`.
+Return the full spec as text in your final message. The orchestrator will write it to `.lat-reverse/concepts/<concept_id>/spec.md`.

@@ -26,17 +26,6 @@ Each candidate has:
 
 Enforce unique IDs. Disambiguate when two scopes produce candidates with the same name.
 
-## State schema
+## Output
 
-After approval, write each candidate to `state.json` with:
-```json
-{
-  "name": "...",
-  "phase": "candidate",
-  "source_files": ["..."],
-  "edges": { "depends_on": [], "refines": [], "constrains": [] },
-  "source_sha": ""
-}
-```
-
-For any relationships between new or existing concepts, run `bun run .lat-reverse/bin/lat-rev.ts concept edge <id> <type> <target>`.
+Return the candidate list as text in your final message. The orchestrator will write them to `state.json` after user approval and run `bun run .lat-reverse/bin/lat-rev.ts concept edge` for any relationships.

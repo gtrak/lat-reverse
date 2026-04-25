@@ -10,28 +10,31 @@ Read `.lat-reverse/workflows/lat-reconstruction.md` — it references the phase-
 
 If the concept's `source_sha` doesn't match git HEAD, run `bun run .lat-reverse/bin/lat-rev.ts drift <concept_id> --json`, present drift to user, let them decide before proceeding.
 
-**You must NOT do extraction, synthesis, or audit work yourself.** Each phase is a `Task` subagent. Your job: launch subagents, present output, run review gates, update state.
+**You must NOT do extraction, synthesis, or audit work yourself.** Each phase is a `Task` subagent that reads files and returns its output as text. Your job: launch subagents, write their output to disk, present it for review, update state.
 
 ### Phase 1 — Extraction
 
 1. Read `.lat-reverse/workflows/extract.md`.
-2. Launch `Task` subagent (`subagent_type: "general"`) with the extract workflow content + `lat-reconstruction.md` content + the concept's `source_files` in the prompt. Include: "Write to `.lat-reverse/concepts/<concept_id>/extraction.md` and return the full content in your final message."
-3. **Review gate**: Output extraction as normal text. `question` tool: "Approve extraction?" with `Approve` / `I have feedback`. If feedback, re-launch with feedback in prompt.
-4. After approval, update concept phase to `extracted` in `state.json`.
+2. Launch `Task` subagent (`subagent_type: "explore"`) with the extract workflow content + `lat-reconstruction.md` content + the concept's `source_files` in the prompt. Tell it: "Read the source files and return the full extraction as text. Do not write any files — just return the content."
+3. **You** write the returned content to `.lat-reverse/concepts/<concept_id>/extraction.md`.
+4. **Review gate**: Output extraction as normal text. `question` tool: "Approve extraction?" with `Approve` / `I have feedback`. If feedback, re-launch with feedback in prompt.
+5. After approval, update concept phase to `extracted` in `state.json`.
 
 ### Phase 2 — Synthesis
 
 1. Read `.lat-reverse/workflows/synthesize.md`.
-2. Launch `Task` subagent (`subagent_type: "general"`) with the synthesize workflow content + `lat-reconstruction.md` + `lat-style.md` in the prompt. Include: "Read `.lat-reverse/concepts/<concept_id>/extraction.md` as your only input — do NOT read source code. Write to `.lat-reverse/concepts/<concept_id>/spec.md` and return the full content."
-3. **Review gate**: Output spec as normal text. `question` tool: "Approve spec?" with `Approve` / `I have feedback`. If feedback, re-launch.
-4. After approval, update concept phase to `specified` in `state.json`.
+2. Launch `Task` subagent (`subagent_type: "general"`) with the synthesize workflow content + `lat-reconstruction.md` + `lat-style.md` in the prompt. Include the extraction content inline. Tell it: "Produce the spec from this extraction. Return the full spec as text. Do not write any files."
+3. **You** write the returned content to `.lat-reverse/concepts/<concept_id>/spec.md`.
+4. **Review gate**: Output spec as normal text. `question` tool: "Approve spec?" with `Approve` / `I have feedback`. If feedback, re-launch.
+5. After approval, update concept phase to `specified` in `state.json`.
 
 ### Phase 3 — Audit
 
 1. Read `.lat-reverse/workflows/audit.md`.
-2. Launch `Task` subagent (`subagent_type: "general"`) with the audit workflow content + `lat-reconstruction.md` in the prompt. Include: "Read `.lat-reverse/concepts/<concept_id>/spec.md` AND the concept's `source_files`. Write to `.lat-reverse/concepts/<concept_id>/audit.md` and return the full content."
-3. **Review gate**: Output audit as normal text. `question` tool: "Approve audit?" with `Approve` / `I have feedback`. If feedback, re-launch.
-4. After approval, update concept phase to `audited` in `state.json`.
+2. Launch `Task` subagent (`subagent_type: "explore"`) with the audit workflow content + `lat-reconstruction.md` + the spec content + source file paths in the prompt. Tell it: "Read the spec and source files, compare them, and return the full audit as text. Do not write any files."
+3. **You** write the returned content to `.lat-reverse/concepts/<concept_id>/audit.md`.
+4. **Review gate**: Output audit as normal text. `question` tool: "Approve audit?" with `Approve` / `I have feedback`. If feedback, re-launch.
+5. After approval, update concept phase to `audited` in `state.json`.
 
 ### Completion
 

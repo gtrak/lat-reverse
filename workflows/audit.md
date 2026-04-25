@@ -10,7 +10,7 @@ You may only report contradictions, mismatches, violations, and implementation l
 
 ## Task
 
-Read `.lat-reverse/concepts/<concept_id>/spec.md` AND the concept's `source_files`. Compare spec against source code. Find:
+Read the spec content and source files provided to you. Compare spec against source code. Find:
 
 - **Violated invariants** — spec claims something that code doesn't guarantee
 - **Undocumented behavior** — code does something spec doesn't mention
@@ -25,4 +25,4 @@ Classify each finding as:
 
 ## Output
 
-Write to `.lat-reverse/concepts/<concept_id>/audit.md`.
+Return the full audit as text in your final message. The orchestrator will write it to `.lat-reverse/concepts/<concept_id>/audit.md`.
