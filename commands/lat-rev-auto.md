@@ -39,14 +39,11 @@ For each concept with `phase: "candidate"`:
 
 ### Step 3 — Integrate
 
-For each concept with `phase: "audited"`:
-
-1. Run overlap detection layers 1-2 via `lat locate` / `lat search`. For layer 3, launch a `Task` explore subagent with the integrate workflow + spec content + matched lat.md/ paths. Tell it: "Read these files and report which claims match, diverge, or are missing. Do not write any files."
-2. **If overlap found**: pause and use `question` tool: "How to resolve overlap on <concept>?" with `Use new spec` / `Keep existing` / `I'll decide manually`. Wait for user answer.
-3. Write to `lat.md/` following integrate workflow rules.
-4. Write `@lat:` annotations in source files.
-5. Resolve `[[?...]]` placeholders.
-6. Update index files.
-7. Run `lat check --dir <source_repo>`.
+1. Write all audited concepts to `lat.md/` first — do not resolve placeholders until all concepts in the batch are written.
+2. For each concept: run overlap detection. **If overlap found**: pause and use `question` tool: "How to resolve overlap on <concept>?" with `Use new spec` / `Keep existing` / `I'll decide manually`. Wait for user answer. If no overlap, write directly.
+3. Write `@lat:` annotations in source files.
+4. Resolve `[[?...]]` placeholders: check concepts integrated in this batch first, then existing `lat.md/` via `lat locate`. Resolve where the target exists.
+5. Update index files.
+6. Run `lat check --dir <source_repo>`.
 
 Do NOT do extraction, synthesis, or audit work yourself. Delegate to subagents. Write all files yourself. All state changes via CLI.

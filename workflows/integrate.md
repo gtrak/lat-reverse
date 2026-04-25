@@ -46,9 +46,12 @@ For each concept, write `@lat:` annotations into the source files listed in `sou
 
 After all concepts in the batch are written to `lat.md/`:
 
-1. Scan all integrated files for `[[?...]]` placeholders.
-2. Check if the target section now exists via `lat locate`.
-3. Resolve `[[?concept-id]]` → `[[concept-id]]` where possible.
+1. Build a map of all concept IDs integrated in this batch → their `lat.md/` file paths.
+2. Scan all integrated files for `[[?...]]` placeholders.
+3. Resolve each placeholder:
+   - First, check if the target was integrated in this batch (use the map from step 1).
+   - If not, check if it already exists in `lat.md/` via `lat locate`.
+   - Resolve `[[?concept-id]]` → `[[concept-id]]` or the appropriate `[[file#Section]]` link where possible.
 4. Remaining `[[?...]]` placeholders stay unresolved — they surface as `lat check md` failures.
 
 ## Index file maintenance
