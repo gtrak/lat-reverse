@@ -4,4 +4,4 @@ description: Enforce lat.md formatting rules on all output specs. Defines requir
 compatibility: opencode
 ---
 
-Full context is in `workflows/lat-style.md`. Read that file for required sections, wiki link syntax, rules, and compression standards.
+Full context is in `.lat-reverse/workflows/lat-style.md`. Read that file for required sections, wiki link syntax, rules, and compression standards.

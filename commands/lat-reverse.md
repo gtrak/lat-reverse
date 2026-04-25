@@ -4,7 +4,7 @@ description: Walk the full per-concept pipeline (extraction → spec → audit) 
 
 ## Context
 
-Read `workflows/lat-reconstruction.md` and `workflows/lat-style.md`. Pass their contents into subagent prompts so each phase subagent has the relevant rules.
+Read `.lat-reverse/workflows/lat-reconstruction.md` and `.lat-reverse/workflows/lat-style.md`. Pass their contents into subagent prompts so each phase subagent has the relevant rules.
 
 ## Task
 
@@ -36,7 +36,7 @@ Each subagent prompt must include:
 
 Use the `Task` tool with `subagent_type: "general"`. The prompt must include:
 
-- **Context**: Full contents of `workflows/lat-reconstruction.md`
+- **Context**: Full contents of `.lat-reverse/workflows/lat-reconstruction.md`
 - **Role**: Extractor — you may only report observable behavior, code evidence, and failure modes. You must NOT infer intent or rationale.
 - **Files to read**: The concept's `source_files` from `state.json`
 - **Task**: Extract responsibilities (observable behavior), invariants (with code evidence + line refs), failure modes. No interpretation.
@@ -48,7 +48,7 @@ After the subagent returns, output the extraction as normal text. Then use the `
 
 Use the `Task` tool with `subagent_type: "general"`. The prompt must include:
 
-- **Context**: Full contents of `workflows/lat-reconstruction.md` AND `workflows/lat-style.md`
+- **Context**: Full contents of `.lat-reverse/workflows/lat-reconstruction.md` AND `.lat-reverse/workflows/lat-style.md`
 - **Role**: Synthesizer — you may only state purpose, invariants, constraints, and rationale. You must NOT reference control flow, data structures, or function names.
 - **File to read**: `.lat-reverse/concepts/<concept_id>/extraction.md` (the only input — do NOT read source code)
 - **Task**: Produce a lat-style spec with sections: Purpose, Non-goals, Invariants, Constraints, Rationale, Related. Follow all lat-style rules. Compress: ~5 bullets/section (soft target), merge overlapping claims, remove vague language. Use `[[?concept-id]]` placeholders for references to not-yet-integrated concepts. Every statement must survive a full rewrite.
@@ -60,7 +60,7 @@ After the subagent returns, output the spec as normal text. Then use the `questi
 
 Use the `Task` tool with `subagent_type: "general"`. The prompt must include:
 
-- **Context**: Full contents of `workflows/lat-reconstruction.md`
+- **Context**: Full contents of `.lat-reverse/workflows/lat-reconstruction.md`
 - **Role**: Auditor — you may only report contradictions, mismatches, violations, and implementation leakage. You must NOT rewrite, fix, or suggest implementation changes.
 - **Files to read**: `.lat-reverse/concepts/<concept_id>/spec.md` AND the concept's `source_files`
 - **Task**: Compare spec against source code. Find violated invariants, undocumented behavior, mismatches. Run "No How" lint: flag implementation-specific statements even if they happen to match the code. Classify each finding as `bug`, `spec_error`, or `undocumented_behavior`.

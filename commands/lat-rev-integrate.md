@@ -4,7 +4,7 @@ description: Write audited concepts into the project's lat.md/ with overlap dete
 
 ## Context
 
-Read `workflows/lat-reconstruction.md` and `workflows/lat-style.md` for reconstruction rules, formatting, wiki link syntax, and constraints.
+Read `.lat-reverse/workflows/lat-reconstruction.md` and `.lat-reverse/workflows/lat-style.md` for reconstruction rules, formatting, wiki link syntax, and constraints.
 
 ## Task
 

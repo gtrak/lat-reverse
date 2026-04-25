@@ -4,7 +4,7 @@ description: Decompose the codebase into concept candidates with source files an
 
 ## Context
 
-Read `workflows/lat-reconstruction.md` for reconstruction rules, role definitions, and constraints. Pass its contents to any subagent that needs reconstruction context.
+Read `.lat-reverse/workflows/lat-reconstruction.md` for reconstruction rules, role definitions, and constraints. Pass its contents to any subagent that needs reconstruction context.
 
 ## Task
 
@@ -24,7 +24,7 @@ Before proposing concepts, check existing state:
 2. Run `lat-rev drift --json` to identify stale concepts.
 3. For each source file:
    - Already covered by audited concepts whose sources haven't drifted → **skip**
-   - Covered by stale concepts → **flag** (suggest `/lat-rev-reconstruct <id>` instead of re-splitting)
+   - Covered by stale concepts → **flag** (suggest `/lat-reverse <id>` instead of re-splitting)
    - No coverage → **propose new concepts**
 
 ## Steps

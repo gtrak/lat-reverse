@@ -4,4 +4,4 @@ description: Reconstruct codebases into invariant-driven concept graphs. Enforce
 compatibility: opencode
 ---
 
-Full context is in `workflows/lat-reconstruction.md`. Read that file for role definitions, constraints, wiki link rules, lifecycle, and edge types.
+Full context is in `.lat-reverse/workflows/lat-reconstruction.md`. Read that file for role definitions, constraints, wiki link rules, lifecycle, and edge types.

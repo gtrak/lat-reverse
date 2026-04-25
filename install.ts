@@ -73,19 +73,38 @@ function copySkillOrCommand(srcDir: string, destDir: string, name: string) {
 console.log(`Installing LAT reverse workflow (${mode})\n`);
 
 ////////////////////////////////////////
-// 1. Workflows
+// 1. .lat-reverse/ (workflows, CLI, state)
 ////////////////////////////////////////
 
 console.log("Workflows:");
-ensureDir(join(opencodeDir, "workflows"));
+ensureDir(join(latReverseDir, "workflows"));
 
 for (const wf of ["lat-reconstruction.md", "lat-style.md"]) {
   copySkillOrCommand(
     join(scriptDir, "workflows"),
-    join(opencodeDir, "workflows"),
+    join(latReverseDir, "workflows"),
     wf
   );
 }
+
+console.log("\nCLI:");
+ensureDir(join(latReverseDir, "bin"));
+
+const cliSrc = join(scriptDir, "bin/lat-rev.ts");
+const cliDest = join(latReverseDir, "bin/lat-rev.ts");
+if (existsSync(cliSrc)) {
+  if (existsSync(cliDest) && !force) {
+    console.log(`  skip (exists): ${cliDest}`);
+  } else {
+    copyFileSync(cliSrc, cliDest);
+    console.log(`  write: ${cliDest}`);
+  }
+} else {
+  console.log(`  skip (not found): ${cliSrc}`);
+}
+
+console.log("\nState:");
+ensureDir(join(latReverseDir, "concepts"));
 
 ////////////////////////////////////////
 // 2. Skills
@@ -113,40 +132,13 @@ copySkillOrCommand(
 console.log("\nCommands:");
 ensureDir(join(opencodeDir, "commands"));
 
-for (const cmd of ["lat-rev-split.md", "lat-rev-reconstruct.md", "lat-rev-integrate.md", "lat-rev-next.md"]) {
+for (const cmd of ["lat-rev-split.md", "lat-reverse.md", "lat-rev-integrate.md", "lat-rev-next.md"]) {
   copySkillOrCommand(
     join(scriptDir, "commands"),
     join(opencodeDir, "commands"),
     cmd
   );
 }
-
-////////////////////////////////////////
-// 4. CLI
-////////////////////////////////////////
-
-console.log("\nCLI:");
-ensureDir(join(latReverseDir, "bin"));
-
-const cliSrc = join(scriptDir, "bin/lat-rev.ts");
-const cliDest = join(latReverseDir, "bin/lat-rev.ts");
-if (existsSync(cliSrc)) {
-  if (existsSync(cliDest) && !force) {
-    console.log(`  skip (exists): ${cliDest}`);
-  } else {
-    copyFileSync(cliSrc, cliDest);
-    console.log(`  write: ${cliDest}`);
-  }
-} else {
-  console.log(`  skip (not found): ${cliSrc}`);
-}
-
-////////////////////////////////////////
-// 5. State
-////////////////////////////////////////
-
-console.log("\nState:");
-ensureDir(join(latReverseDir, "concepts"));
 
 const statePath = join(latReverseDir, "state.json");
 if (existsSync(statePath) && !force) {
@@ -168,7 +160,7 @@ if (existsSync(statePath) && !force) {
 }
 
 ////////////////////////////////////////
-// 6. Config (project only)
+// 4. Config (project only)
 ////////////////////////////////////////
 
 if (mode === "project") {
