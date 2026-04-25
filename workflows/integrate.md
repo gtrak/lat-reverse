@@ -32,7 +32,7 @@ For each concept (after overlap resolution):
 3. Use the concept name as the top-level heading.
 4. Preserve existing content — never delete existing wiki links from sections being edited.
 5. Preserve the leading paragraph of existing sections (append new content below).
-6. Source code wiki links (`[[src/file.ts#symbol]]`) only in `Related` sections.
+6. Source code wiki links (`[[path/relative/to/repo/root#symbol]]` — no `.md` extension, no `src/` prefix unless file is under `src/`, must be a file not a directory) only in `Related` sections. See reconstruction.md for full link syntax.
 7. Interface sections describe domain concepts and contractual shape, not verbatim type definitions. Preserve this distinction when editing existing lat.md/ content.
 
 ## Source annotation

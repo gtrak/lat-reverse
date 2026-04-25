@@ -17,6 +17,8 @@ Read the spec content and source files provided to you. Compare spec against sou
 - **Interface gaps** — code exposes a public surface (from the interface definition) that the spec's Interface section does not describe
 - **Mismatches** — spec and code disagree
 
+Always produce a complete fresh audit. Do not check for or reference any existing `audit.md` file — even if one exists from a prior cycle, ignore it and audit from scratch.
+
 Run "No How" lint: flag implementation-specific statements even if they happen to match the code.
 
 Classify each finding as:

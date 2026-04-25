@@ -46,7 +46,7 @@ Per-concept sequence:
 3. Audit → write audit.md → auto-correct if needed → promote to audited
 4. Snapshot
 
-After processing a group of concepts, promote and snapshot in bulk:
+After processing a group of concepts, promote and snapshot in bulk. Before each `promote-batch`, run `concept list --phase <source_phase> --json` — if empty (concepts already promoted past that phase), skip that promote-batch call and proceed:
 ```
 bun run .lat-reverse/bin/lat-rev.ts concept promote-batch --from <phase> --to <phase>
 bun run .lat-reverse/bin/lat-rev.ts snapshot --all
@@ -54,7 +54,7 @@ bun run .lat-reverse/bin/lat-rev.ts snapshot --all
 
 ### 3. Integrate (pause on overlap conflicts)
 
-Write all audited concepts to `lat.md/` first — do not resolve placeholders until all concepts in the batch are written.
+Write all audited concepts to `lat.md/` first — do not resolve placeholders until all concepts in the batch are written. Follow wiki link syntax from reconstruction.md: no `.md` extension, no `src/` prefix unless the file is under `src/`, link to files not directories, verify paths exist before writing.
 
 If overlap is detected with existing `lat.md/` content, **pause and ask the user** to resolve. Otherwise, write to `lat.md/`, annotate source files, resolve placeholders (check batch first, then `lat locate`), update index files, and run `lat check`.
 

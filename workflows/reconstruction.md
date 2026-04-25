@@ -90,15 +90,40 @@ to be true?"
 
 ## Wiki link rules
 
-- Section refs: `[[file#Section#SubSection]]`
-- Placeholder refs: `[[?concept-id]]` (resolved during integrate)
-- Source code refs: `[[src/auth.ts#validateToken]]`
+### Internal wiki links
+
+- Format: `[[path/to/file#Section#SubSection]]`
+- **Never** include `.md` extension in wiki links
+- ✅ `[[foundation/core#Task State Machine]]`
+- ❌ `[[foundation/core.md#Task State Machine]]`
+
+### Source code links
+
+- Path relative to **repo root** — no `src/` prefix unless the file actually lives under `src/`
+- Must point to a **file**, not a directory
+- **Verify the file path exists** in the source repo before writing
+- ✅ `[[crates/rot-core/src/types.rs#TaskState]]`
+- ❌ `[[src/crates/rot-core/src/types.rs#TaskState]]`
+- ❌ `[[crates/rot-api]]` (directory, not a file)
+
+### Index file entries
+
+- `[[name]]` — no `.md` extension
+- ✅ `[[core]]`
+- ❌ `[[core.md]]`
+
+### Placeholder refs
+
+- `[[?concept-id]]` — resolved during integrate
+- Reference concepts not yet in `lat.md/`. Unresolved placeholders remain as `[[?...]]` and surface as `lat check md` failures.
+
+### Scope restriction
+
 - Source code wiki links allowed **only** in `Related` sections. Banned from Purpose, Interface, Invariants, Constraints, and Rationale.
-- Placeholder `[[?concept-id]]` links reference concepts not yet in `lat.md/`. Unresolved placeholders remain as `[[?...]]` and surface as `lat check md` failures.
 
 ## `@lat:` source annotations
 
-`// @lat: [[lat.md/path#Concept]]` annotations in source files at relevant symbol locations. Language-appropriate comment prefix (`//` for TS/JS/Go, `#` for Python/Rust). Verified via `lat check code-refs`.
+`// @lat: [[lat.md/path#Concept]]` annotations in source files at relevant symbol locations. Language-appropriate comment prefix (`//` for TS/JS/Go, `#` for Python/Rust). Same link syntax as wiki links — no `.md` extension. Verified via `lat check code-refs`.
 
 ## Concept lifecycle
 

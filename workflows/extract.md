@@ -19,6 +19,8 @@ Read the concept's `source_files`. Extract:
 
 No interpretation, no intent inference. Evidence only.
 
+Only read files listed in `source_files`. Do not read state files, project config, metadata, or any file not in `source_files`.
+
 ## Subagent type
 
 `explore` — reads source files and reports evidence.

@@ -2,7 +2,22 @@
 
 ## Section structure
 
-Every section should have a leading paragraph of reasonable length (soft target, not a hard limit) before any child headings.
+Every section must open with a summary paragraph before any ### child headings. Subagents often skip this and jump straight to bullet points — do not.
+
+Correct:
+```
+## Invariants
+The task state machine guarantees consistent transitions.
+### Valid transitions
+- ...
+```
+
+Wrong (no leading paragraph before ###):
+```
+## Invariants
+### Valid transitions
+- ...
+```
 
 ## Required sections
 
@@ -21,7 +36,7 @@ Every concept spec must contain:
 - No implementation leakage
 - No vague language ("handles errors", "works correctly", "various things")
 - Aggressive redundancy removal
-- Source code wiki links (`[[src/...]]`) only in `Related` sections
+- Source code wiki links (`[[path/relative/to/repo/root#symbol]]` — no `.md` extension, path relative to repo root, must be a file not a directory) only in `Related` sections
 - No function/method names as concept identifiers
 - Interface section describes domain concepts and contractual shape, not verbatim type definitions
 - Every statement must survive a complete rewrite of the implementation
