@@ -39,10 +39,13 @@ This creates:
 |---|---|
 | `.opencode/skills/lat-reconstruction/SKILL.md` | Core workflow rules |
 | `.opencode/skills/lat-style/SKILL.md` | Formatting rules |
-| `.opencode/commands/split.md` | Decompose codebase into candidates |
-| `.opencode/commands/reconstruct.md` | Run extraction → synthesis → audit |
-| `.opencode/commands/integrate.md` | Write specs into `lat.md/` |
-| `.opencode/commands/next.md` | Show workflow status |
+| `.opencode/commands/lat-rev-split.md` | Decompose codebase into candidates |
+
+| `.opencode/commands/lat-rev-reconstruct.md` | Run extraction → synthesis → audit |
+
+| `.opencode/commands/lat-rev-integrate.md` | Write specs into `lat.md/` |
+
+| `.opencode/commands/lat-rev-next.md` | Show workflow status |
 | `.lat-reverse/bin/lat-rev.ts` | State management CLI |
 | `.lat-reverse/state.json` | Concept index + metadata |
 | `.lat-reverse/concepts/` | Per-concept artifacts |
@@ -50,10 +53,10 @@ This creates:
 ## Usage (in opencode)
 
 ```
-/split                  Decompose the codebase into concept candidates
-/reconstruct <id>       Run the full pipeline for a concept
-/integrate [<id>]       Write audited specs into lat.md/
-/next [<id>]            Show status and recommended next action
+/lat-rev-split                  Decompose the codebase into concept candidates
+/lat-rev-reconstruct <id>       Run the full pipeline for a concept
+/lat-rev-integrate [<id>]       Write audited specs into lat.md/
+/lat-rev-next [<id>]            Show status and recommended next action
 ```
 
 ## CLI
