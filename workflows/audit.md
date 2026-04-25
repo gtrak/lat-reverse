@@ -23,6 +23,16 @@ Classify each finding as:
 - `spec_error` — spec claims something false about the code
 - `undocumented_behavior` — code does something not covered by spec
 
+## Subagent prompt template
+
+When launching an audit subagent, include this in the prompt:
+
+> Compare the following spec against the source files. You are the Auditor — report only contradictions, mismatches, violations, and implementation leakage. Do NOT rewrite, fix, or suggest changes. Classify each finding as bug, spec_error, or undocumented_behavior. Run "No How" lint: flag implementation-specific statements. Return the full audit as text. Do not write any files.
+>
+> Spec: <paste spec content here>
+> Source files: <list source file paths here>
+> Context: <paste reconstruction.md content here>
+
 ## What happens after audit
 
 The orchestrator presents findings to the user with three options:

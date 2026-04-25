@@ -18,6 +18,15 @@ Read the concept's `source_files`. Extract:
 
 No interpretation, no intent inference. Evidence only.
 
+## Subagent prompt template
+
+When launching an extraction subagent, include this in the prompt:
+
+> Read the following source files and extract responsibilities, invariants (with code evidence + line refs), and failure modes. You are the Extractor — report only observable behavior and evidence. Do NOT infer intent or rationale. Return the full extraction as text. Do not write any files.
+>
+> Source files: <list source_files here>
+> Context: <paste reconstruction.md content here>
+
 ## Output
 
 Return the full extraction as text in your final message. The orchestrator will write it to `.lat-reverse/concepts/<concept_id>/extraction.md`.

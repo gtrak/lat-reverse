@@ -4,7 +4,7 @@ description: Run the full reconstruction pipeline autonomously — split, recons
 
 Execute this workflow now. Do not describe it — perform each step.
 
-Read `.lat-reverse/workflows/auto.md`, `.lat-reverse/workflows/reconstruction.md`, `.lat-reverse/workflows/style.md`, and the phase workflows (`extract.md`, `synthesize.md`, `audit.md`, `integrate.md`).
+Read `.lat-reverse/workflows/auto.md` for the full pipeline rules. Read the phase workflows (`extract.md`, `synthesize.md`, `audit.md`, `integrate.md`) for subagent prompt templates.
 
 `$scope` is optional — directory, glob, or natural language. Default: entire project.
 
@@ -21,19 +21,19 @@ Read `.lat-reverse/workflows/auto.md`, `.lat-reverse/workflows/reconstruction.md
 For each concept with `phase: "candidate"`:
 
 **Extract:**
-1. Launch a `Task` explore subagent with extract + reconstruction workflow content + the concept's `source_files`. Tell it: "Read the source files and return the full extraction as text. Do not write any files."
+1. Launch a `Task` explore subagent using the prompt template from `.lat-reverse/workflows/extract.md`. Fill in source files and reconstruction.md content.
 2. Write the returned content to `.lat-reverse/concepts/<id>/extraction.md`.
 3. Run `bun run .lat-reverse/bin/lat-rev.ts concept promote <id> --phase extracted` — no review gate.
 
 **Synthesize:**
-1. Launch a `Task` general subagent with synthesize + reconstruction + style workflow content + extraction content inline. Tell it: "Produce the spec from this extraction. Return the full spec as text. Do not write any files."
+1. Launch a `Task` general subagent using the prompt template from `.lat-reverse/workflows/synthesize.md`. Fill in extraction content, reconstruction.md + style.md content.
 2. Write the returned content to `.lat-reverse/concepts/<id>/spec.md`.
 3. Run `bun run .lat-reverse/bin/lat-rev.ts concept promote <id> --phase specified` — no review gate.
 
 **Audit:**
-1. Launch a `Task` explore subagent with audit + reconstruction workflow content + spec content + source file paths. Tell it: "Read the spec and source files, compare them, and return the full audit as text. Do not write any files."
+1. Launch a `Task` explore subagent using the prompt template from `.lat-reverse/workflows/audit.md`. Fill in spec content, source file paths, reconstruction.md content.
 2. Write the returned content to `.lat-reverse/concepts/<id>/audit.md`.
-3. If audit found `bug` or `spec_error` findings, auto-correct: re-launch the synthesis subagent with the audit findings + original extraction content inline. Tell it: "The previous spec had these issues: <paste findings>. Produce a corrected spec. Return the full spec as text. Do not write any files." Write the corrected spec to `.lat-reverse/concepts/<id>/spec.md`. Then re-run audit (step 1). Repeat until audit finds no `bug` or `spec_error` findings (max 3 cycles — then accept and promote).
+3. If audit found `bug` or `spec_error` findings, auto-correct: re-launch the synthesis subagent using the **auto-correct prompt template** from `synthesize.md` with the audit findings + original extraction. Write corrected spec. Re-run audit. Repeat until clean or only `undocumented_behavior` findings remain (max 3 cycles).
 4. Once audit is clean or only has `undocumented_behavior` findings, promote via `bun run .lat-reverse/bin/lat-rev.ts concept promote <id> --phase audited`.
 5. Run `bun run .lat-reverse/bin/lat-rev.ts snapshot <id>`.
 
