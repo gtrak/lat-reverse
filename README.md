@@ -1,6 +1,6 @@
 # lat-reverse
 
-Reconstruct invariant-driven specifications from an existing codebase. Decomposes code into concept graphs and produces [lat.md](https://lat.md)-compatible documentation that survives full rewrites.
+Reconstruct invariant-driven specifications from an existing codebase that doesn't have them. Decomposes code into concept graphs and produces [lat.md](https://lat.md)-compatible documentation that survives full rewrites, that you can maintain more incrementally going forward.
 
 ## What it does
 
