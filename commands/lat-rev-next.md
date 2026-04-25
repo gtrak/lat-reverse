@@ -6,15 +6,17 @@ Execute `bun run .lat-reverse/bin/lat-rev.ts status --json` now. If the user pro
 
 Take the JSON output and format it for the user:
 
-- Phase summary: `candidate(N) extracted(N) specified(N) audited(N)`
-- Drift report: list stale concepts with their changed files
-- Recommended next command
+- Phase summary with count per phase
+- List each concept with its ID, phase, and staleness
+- Recommended next command with a specific concept ID
 
 Example output (no argument):
 ```
 Phase: candidate(3) extracted(1) specified(2) audited(1)
-2 concepts STALE: c_playfield (src/board.ts), c_tetromino_shapes (src/pieces.ts)
-Recommended: /lat-rev-reconstruct c_playfield (source changed since last extraction)
+  c_playfield → specified (Grid-Based Playfield)
+  c_row_clearing → candidate STALE (Row Clearing)
+  c_scoring → candidate (Scoring)
+Recommended: /lat-rev-reconstruct c_row_clearing (source changed since last extraction)
 ```
 
 Example output (with concept_id):

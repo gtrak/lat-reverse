@@ -107,13 +107,13 @@ function gitHasUncommitted(dir: string): boolean {
 function nextStep(phase: Phase): string {
   switch (phase) {
     case "candidate":
-      return "Next: /reconstruct <id> will run extraction phase";
+      return "Next: /lat-rev-reconstruct <id> will run extraction phase";
     case "extracted":
-      return "Next: /reconstruct <id> will run synthesis phase";
+      return "Next: /lat-rev-reconstruct <id> will run synthesis phase";
     case "specified":
-      return "Next: /reconstruct <id> will run audit phase";
+      return "Next: /lat-rev-reconstruct <id> will run audit phase";
     case "audited":
-      return "Next: /integrate <id>";
+      return "Next: /lat-rev-integrate <id>";
   }
 }
 
@@ -211,6 +211,7 @@ function cmdStatus() {
     return;
   }
 
+  const concepts: Array<{ id: string; name: string; phase: string; stale: boolean; changed_files: string[] }> = [];
   const counts: Record<string, number> = {};
   for (const p of VALID_PHASES) counts[p] = 0;
   const stale: Array<{ id: string; changed_files: string[] }> = [];
@@ -218,11 +219,13 @@ function cmdStatus() {
   const head = gitHead(state.source_repo);
   for (const [id, c] of Object.entries(state.concepts)) {
     counts[c.phase] = (counts[c.phase] || 0) + 1;
-    if (head && c.source_sha && head !== c.source_sha) {
-      const changed = c.source_files.length > 0
-        ? gitChangedFiles(state.source_repo, c.source_sha, head, c.source_files)
-        : [];
-      stale.push({ id, changed_files: changed });
+    const isStale = head && c.source_sha && head !== c.source_sha;
+    const changedFiles = isStale
+      ? gitChangedFiles(state.source_repo, c.source_sha, head!, c.source_files)
+      : [];
+    concepts.push({ id, name: c.name, phase: c.phase, stale: !!isStale, changed_files: changedFiles });
+    if (isStale) {
+      stale.push({ id, changed_files: changedFiles });
     }
   }
 
@@ -232,16 +235,27 @@ function cmdStatus() {
       ? stale.map((s) => `${s.id} (${s.changed_files.join(", ") || "unknown"})`).join(", ")
       : "none";
 
+  const firstCandidate = concepts.find((c) => c.phase === "candidate");
+  const firstExtracted = concepts.find((c) => c.phase === "extracted");
+  const firstSpecified = concepts.find((c) => c.phase === "specified");
+  const firstUnaudited = firstCandidate || firstExtracted || firstSpecified;
+
   const recommendation = stale.length > 0
-    ? `Recommended: /reconstruct ${stale[0].id} (source changed since last extraction)`
-    : Object.entries(counts).some(([p, c]) => c > 0 && p !== "audited")
-    ? `Recommended: /reconstruct <id>`
-    : "All concepts audited. /integrate to write to lat.md/";
+    ? `Recommended: /lat-rev-reconstruct ${stale[0].id} (source changed since last extraction)`
+    : firstUnaudited
+    ? `Recommended: /lat-rev-reconstruct ${firstUnaudited.id} (${firstUnaudited.phase})`
+    : counts["audited"] > 0
+    ? "All concepts audited. /lat-rev-integrate to write to lat.md/"
+    : "No concepts yet. /lat-rev-split to decompose the codebase";
 
   if (useJson) {
-    output({ phases: counts, stale, recommendation });
+    output({ phases: counts, concepts, stale, recommendation });
   } else {
     console.log(`Phase: ${phaseStr}`);
+    for (const c of concepts) {
+      const staleMarker = c.stale ? " STALE" : "";
+      console.log(`  ${c.id} → ${c.phase}${staleMarker} (${c.name})`);
+    }
     if (stale.length > 0) console.log(`${stale.length} concepts STALE: ${staleStr}`);
     console.log(recommendation);
   }
