@@ -2,7 +2,9 @@
 description: Write audited concepts into the project's lat.md/ with overlap detection, source annotations, and placeholder resolution
 ---
 
-Load the **lat-reconstruction** and **lat-style** skills before proceeding.
+## Context
+
+Read `workflows/lat-reconstruction.md` and `workflows/lat-style.md` for reconstruction rules, formatting, wiki link syntax, and constraints.
 
 ## Task
 

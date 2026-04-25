@@ -2,7 +2,9 @@
 description: Decompose the codebase into concept candidates with source files and inferred graph edges
 ---
 
-Load the **lat-reconstruction** skill before proceeding.
+## Context
+
+Read `workflows/lat-reconstruction.md` for reconstruction rules, role definitions, and constraints. Pass its contents to any subagent that needs reconstruction context.
 
 ## Task
 

@@ -73,10 +73,25 @@ function copySkillOrCommand(srcDir: string, destDir: string, name: string) {
 console.log(`Installing LAT reverse workflow (${mode})\n`);
 
 ////////////////////////////////////////
-// 1. Skills
+// 1. Workflows
 ////////////////////////////////////////
 
-console.log("Skills:");
+console.log("Workflows:");
+ensureDir(join(opencodeDir, "workflows"));
+
+for (const wf of ["lat-reconstruction.md", "lat-style.md"]) {
+  copySkillOrCommand(
+    join(scriptDir, "workflows"),
+    join(opencodeDir, "workflows"),
+    wf
+  );
+}
+
+////////////////////////////////////////
+// 2. Skills
+////////////////////////////////////////
+
+console.log("\nSkills:");
 ensureDir(join(opencodeDir, "skills/lat-reconstruction"));
 ensureDir(join(opencodeDir, "skills/lat-style"));
 
@@ -92,7 +107,7 @@ copySkillOrCommand(
 );
 
 ////////////////////////////////////////
-// 2. Commands
+// 3. Commands
 ////////////////////////////////////////
 
 console.log("\nCommands:");
@@ -107,7 +122,7 @@ for (const cmd of ["lat-rev-split.md", "lat-rev-reconstruct.md", "lat-rev-integr
 }
 
 ////////////////////////////////////////
-// 3. CLI
+// 4. CLI
 ////////////////////////////////////////
 
 console.log("\nCLI:");
@@ -127,7 +142,7 @@ if (existsSync(cliSrc)) {
 }
 
 ////////////////////////////////////////
-// 4. State
+// 5. State
 ////////////////////////////////////////
 
 console.log("\nState:");
@@ -153,7 +168,7 @@ if (existsSync(statePath) && !force) {
 }
 
 ////////////////////////////////////////
-// 5. Config (project only)
+// 6. Config (project only)
 ////////////////////////////////////////
 
 if (mode === "project") {
