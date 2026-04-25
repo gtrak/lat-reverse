@@ -33,7 +33,7 @@ For each concept with `phase: "candidate"`:
 **Audit:**
 1. Launch a `Task` explore subagent with audit + reconstruction workflow content + spec content + source file paths. Tell it: "Read the spec and source files, compare them, and return the full audit as text. Do not write any files."
 2. Write the returned content to `.lat-reverse/concepts/<id>/audit.md`.
-3. Run `bun run .lat-reverse/bin/lat-rev.ts concept promote <id> --phase audited` — no review gate.
+3. Auto-accept findings (equivalent to "Accept findings" option). Promote via `bun run .lat-reverse/bin/lat-rev.ts concept promote <id> --phase audited` — no review gate. Audit.md records any known gaps.
 4. Run `bun run .lat-reverse/bin/lat-rev.ts snapshot <id>`.
 
 ### Step 3 — Integrate

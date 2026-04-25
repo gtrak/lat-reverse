@@ -23,6 +23,13 @@ Classify each finding as:
 - `spec_error` — spec claims something false about the code
 - `undocumented_behavior` — code does something not covered by spec
 
+## What happens after audit
+
+The orchestrator presents findings to the user with three options:
+- **Fix spec** — re-run synthesis to correct the spec, then re-audit
+- **Fix code** — user edits source files, then re-audit
+- **Accept findings** — promote to audited with known gaps recorded in audit.md
+
 ## Output
 
 Return the full audit as text in your final message. The orchestrator will write it to `.lat-reverse/concepts/<concept_id>/audit.md`.

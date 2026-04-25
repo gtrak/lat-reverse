@@ -31,8 +31,13 @@ Do NOT do extraction, synthesis, or audit work yourself. Each phase is a `Task` 
 1. Read `.lat-reverse/workflows/audit.md` and `.lat-reverse/workflows/reconstruction.md`.
 2. Launch a `Task` explore subagent with the audit + reconstruction workflow content + the spec content + source file paths in the prompt. Tell it: "Read the spec and source files, compare them, and return the full audit as text. Do not write any files."
 3. Write the returned content to `.lat-reverse/concepts/<concept_id>/audit.md`.
-4. **Review gate**: Output audit as normal text. Use `question` tool: "Approve audit?" with `Approve` / `I have feedback`. If feedback, re-launch.
-5. After approval, run `bun run .lat-reverse/bin/lat-rev.ts concept promote <concept_id> --phase audited`.
+4. **Review gate**: Output audit as normal text, highlighting any `bug`, `spec_error`, or `undocumented_behavior` findings.
+   - If **no issues found**: promote immediately.
+   - If **issues found**: use `question` tool: "Audit found issues. How to proceed?" with `Fix spec (re-synthesize)` / `Fix code (I'll edit, then re-audit)` / `Accept findings (promote with caveats)`.
+     - **Fix spec**: re-launch synthesis subagent with the audit findings + original extraction. Write new spec, then re-run audit.
+     - **Fix code**: wait for user to edit source files, then re-run audit.
+     - **Accept findings**: promote to audited. The audit.md records the known gaps.
+5. Run `bun run .lat-reverse/bin/lat-rev.ts concept promote <concept_id> --phase audited`.
 
 ### Completion
 
