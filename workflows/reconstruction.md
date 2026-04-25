@@ -4,9 +4,9 @@
 
 | Role | Allowed | Forbidden |
 |---|---|---|
-| Extractor | Observable behavior, code evidence, failure modes | Intent, rationale, "why" |
-| Synthesizer | Purpose, invariants, constraints, rationale | Control flow, data structures, function names |
-| Auditor | Contradictions, mismatches, violations, implementation leakage | Rewriting, fixing, suggesting implementation |
+| Extractor | Observable behavior, interface surfaces, code evidence, failure modes | Intent, rationale, "why" |
+| Synthesizer | Purpose, interface contracts, invariants, constraints, rationale | Control flow, data structures, function names |
+| Auditor | Contradictions, mismatches, violations, interface gaps, implementation leakage | Rewriting, fixing, suggesting implementation |
 
 ## Invariant validity constraint
 
@@ -20,6 +20,67 @@ Reject outputs that include:
 - Function/method names as concept identifiers
 - Implementation-specific terminology
 
+## Interface-first principle
+
+Concepts capture contracts — what consumers rely on. See "Interface definition" below.
+
+## Interface definition
+
+An interface is a **contract boundary** — the set of guarantees that external
+consumers depend on. It is not what the code does internally, but what it
+promises to the outside.
+
+### What counts as an interface
+
+Identify these surfaces in source files:
+
+- **HTTP/RPC endpoints** — method + path, request semantics, response
+  semantics, status codes, auth requirements
+- **Exported functions and methods** — purpose, preconditions,
+  postconditions, error contracts
+- **Exported types and interfaces** — domain concept each type represents,
+  key guarantees (e.g., "identity is immutable after creation"), not field lists
+- **Trait implementations** — which trait, behavioral guarantees beyond
+  the trait signature
+- **Event/message schemas** — published/consumed event semantics,
+  payload meaning
+- **Configuration contracts** — required config keys, their domain meaning,
+  valid ranges, defaults, failure behavior on invalid config
+- **Plugin/extension points** — hook semantics, callback contracts,
+  registration API guarantees
+
+### What goes in the Interface section
+
+For each surface, state the **contractual guarantee** using domain concepts,
+not type shapes:
+
+- What inputs are accepted and what they must satisfy (preconditions)
+- What outputs are produced and what they guarantee (postconditions)
+- What errors or failure modes are possible and what they mean to the caller
+- What invariants hold across the surface
+
+Do NOT include:
+
+- Verbatim type definitions or field lists
+- Internal algorithm details or control flow
+- Private/helper function signatures
+- Implementation-specific type details (e.g., "uses a HashMap internally")
+- Step-by-step process descriptions
+
+The docs are an annotated map — given the docs and the source code, a reader
+should be able to reconstruct a detailed plan for rewrite. Describe the domain
+concepts and contractual shape, not the structural details.
+
+### Interface surface vs. internal behavior
+
+Ask: "If this code were completely rewritten, what would callers still need
+to be true?"
+
+- Everything callers depend on → Interface section
+- Everything the code happens to do internally → Invariants or Constraints
+- If nothing external depends on it → "No public surface. Internal to
+  [[concept-id]]."
+
 ## Compression rules
 
 - Max ~5 bullets per section (soft target, not a hard limit)
@@ -32,7 +93,7 @@ Reject outputs that include:
 - Section refs: `[[file#Section#SubSection]]`
 - Placeholder refs: `[[?concept-id]]` (resolved during integrate)
 - Source code refs: `[[src/auth.ts#validateToken]]`
-- Source code wiki links allowed **only** in `Related` sections. Banned from Purpose, Invariants, Constraints, and Rationale.
+- Source code wiki links allowed **only** in `Related` sections. Banned from Purpose, Interface, Invariants, Constraints, and Rationale.
 - Placeholder `[[?concept-id]]` links reference concepts not yet in `lat.md/`. Unresolved placeholders remain as `[[?...]]` and surface as `lat check md` failures.
 
 ## `@lat:` source annotations
@@ -42,7 +103,7 @@ Reject outputs that include:
 ## Concept lifecycle
 
 ```
-candidate → extracted → specified → audited
+candidate → extracted → specified → audited → integrated
 ```
 
 Progression requires the prerequisite artifact to exist and be approved by the user. Re-running reconstruction on an already-audited concept restarts from scratch. Feedback is handled inline during review gates — no separate revise step.

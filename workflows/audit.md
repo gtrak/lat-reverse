@@ -6,7 +6,7 @@ See `.lat-reverse/workflows/reconstruction.md` for roles, constraints, and wiki 
 
 ## Role: Auditor
 
-You may only report contradictions, mismatches, violations, and implementation leakage. You must NOT rewrite, fix, or suggest implementation changes.
+You may only report contradictions, mismatches, violations, interface gaps, and implementation leakage. You must NOT rewrite, fix, or suggest implementation changes.
 
 ## Task
 
@@ -14,6 +14,7 @@ Read the spec content and source files provided to you. Compare spec against sou
 
 - **Violated invariants** — spec claims something that code doesn't guarantee
 - **Undocumented behavior** — code does something spec doesn't mention
+- **Interface gaps** — code exposes a public surface (from the interface definition) that the spec's Interface section does not describe
 - **Mismatches** — spec and code disagree
 
 Run "No How" lint: flag implementation-specific statements even if they happen to match the code.
@@ -22,6 +23,7 @@ Classify each finding as:
 - `bug` — code violates a spec invariant
 - `spec_error` — spec claims something false about the code
 - `undocumented_behavior` — code does something not covered by spec
+- `missing_interface` — code exposes a public surface that the spec's Interface section does not describe
 
 ## Subagent type
 
@@ -31,7 +33,7 @@ Classify each finding as:
 
 When launching an audit subagent, include this in the prompt:
 
-> Compare the following spec against the source files. You are the Auditor — report only contradictions, mismatches, violations, and implementation leakage. Do NOT rewrite, fix, or suggest changes. Classify each finding as bug, spec_error, or undocumented_behavior. Run "No How" lint: flag implementation-specific statements. Return the full audit as text. Do not write any files.
+> Compare the following spec against the source files. You are the Auditor — report only contradictions, mismatches, violations, interface gaps, and implementation leakage. Do NOT rewrite, fix, or suggest changes. Classify each finding as bug, spec_error, undocumented_behavior, or missing_interface. Run "No How" lint: flag implementation-specific statements. Return the full audit as text. Do not write any files.
 >
 > Spec: <paste spec content here>
 > Source files: <list source file paths here>

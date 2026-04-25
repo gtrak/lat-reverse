@@ -32,6 +32,14 @@ For scopes with >20 source files or >3 directories:
 
 This ensures each subagent reads a small enough scope to identify fine-grained responsibilities.
 
+## Interface-aware decomposition
+
+Prefer concept boundaries that align with interface surfaces:
+
+- Each distinct API surface (HTTP endpoint group, exported module API, trait impl) is a strong concept boundary signal.
+- Extension points (plugin hooks, callback contracts, config schemas) deserve their own concept if multiple consumers depend on the contract.
+- Internal code with no public surface is a weaker boundary signal — check whether it represents a genuine contract before making it a standalone concept.
+
 ## Pipeline-aware behavior
 
 Before proposing concepts, check existing state:

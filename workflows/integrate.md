@@ -33,6 +33,7 @@ For each concept (after overlap resolution):
 4. Preserve existing content — never delete existing wiki links from sections being edited.
 5. Preserve the leading paragraph of existing sections (append new content below).
 6. Source code wiki links (`[[src/file.ts#symbol]]`) only in `Related` sections.
+7. Interface sections describe domain concepts and contractual shape, not verbatim type definitions. Preserve this distinction when editing existing lat.md/ content.
 
 ## Source annotation
 

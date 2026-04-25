@@ -10,6 +10,7 @@ Every concept spec must contain:
 
 - `## Purpose` — what this concept guarantees
 - `## Non-goals` — what it explicitly does not cover
+- `## Interface` — contractual guarantees for each public surface using domain concepts, not type shapes. Always present; "No public surface." is valid
 - `## Invariants` — statements that always hold
 - `## Constraints` — limitations and boundaries
 - `## Rationale` — why these decisions exist
@@ -22,6 +23,7 @@ Every concept spec must contain:
 - Aggressive redundancy removal
 - Source code wiki links (`[[src/...]]`) only in `Related` sections
 - No function/method names as concept identifiers
+- Interface section describes domain concepts and contractual shape, not verbatim type definitions
 - Every statement must survive a complete rewrite of the implementation
 
 ## Compression

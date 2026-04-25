@@ -7,7 +7,7 @@ See `.lat-reverse/workflows/style.md` for required sections, formatting, and com
 
 ## Role: Synthesizer
 
-You may only state purpose, invariants, constraints, and rationale. You must NOT reference control flow, data structures, or function names.
+You may only state purpose, interface contracts, invariants, constraints, and rationale. You must NOT reference control flow, data structures, or function names.
 
 ## Task
 
@@ -15,6 +15,7 @@ Read the extraction content provided to you (your only input — do NOT read sou
 
 - `## Purpose` — what this concept guarantees
 - `## Non-goals` — what it explicitly does not cover
+- `## Interface` — contractual guarantees for each public surface using domain concepts, not type shapes. Always present; "No public surface. Internal to [[concept-id]]." is valid
 - `## Invariants` — statements that always hold
 - `## Constraints` — limitations and boundaries
 - `## Rationale` — why these decisions exist
@@ -30,7 +31,7 @@ Follow all lat-style rules. Compress: ~5 bullets/section (soft target), merge ov
 
 When launching a synthesis subagent, include this in the prompt:
 
-> Produce a lat-style spec from the following extraction. You are the Synthesizer — state purpose, invariants, constraints, and rationale only. Do NOT reference control flow, data structures, or function names. Use [[?concept-id]] placeholders for references to not-yet-integrated concepts. Every statement must survive a full rewrite. Return the full spec as text. Do not write any files.
+> Produce a lat-style spec from the following extraction. You are the Synthesizer — state purpose, interface contracts (using domain concepts, not type shapes), invariants, constraints, and rationale only. Do NOT reference control flow, data structures, or function names. Use [[?concept-id]] placeholders for references to not-yet-integrated concepts. Every statement must survive a full rewrite. Return the full spec as text. Do not write any files.
 >
 > Extraction: <paste extraction content here>
 > Context: <paste reconstruction.md + style.md content here>
