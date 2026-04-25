@@ -24,7 +24,7 @@ For each concept with `phase: "candidate"`, run the full reconstruct pipeline:
 
 - **Extract**: Launch explore subagent with extract + reconstruction workflow content. Write output to `.lat-reverse/concepts/<id>/extraction.md`. Promote via `bun run .lat-reverse/bin/lat-rev.ts concept promote <id> --phase extracted`.
 - **Synthesize**: Launch general subagent with synthesize + reconstruction + style workflow content + extraction content inline. Write output to `.lat-reverse/concepts/<id>/spec.md`. Promote via `bun run .lat-reverse/bin/lat-rev.ts concept promote <id> --phase specified`.
-- **Audit**: Launch explore subagent with audit + reconstruction workflow content + spec content + source file paths. Write output to `.lat-reverse/concepts/<id>/audit.md`. Promote via `bun run .lat-reverse/bin/lat-rev.ts concept promote <id> --phase audited`.
+- **Audit**: Launch explore subagent with audit + reconstruction workflow content + spec content + source file paths. Write output to `.lat-reverse/concepts/<id>/audit.md`. If audit found `bug` or `spec_error` findings, auto-correct by re-launching synthesis with the audit findings + original extraction. Write corrected spec. Re-run audit. Repeat until clean or only `undocumented_behavior` findings remain (max 3 cycles). Then promote via `bun run .lat-reverse/bin/lat-rev.ts concept promote <id> --phase audited`.
 - **Snapshot**: Run `bun run .lat-reverse/bin/lat-rev.ts snapshot <id>`.
 
 ### 3. Integrate (pause on overlap conflicts)
