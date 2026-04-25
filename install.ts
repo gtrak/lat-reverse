@@ -60,7 +60,7 @@ console.log(`Installing LAT reverse workflow (${mode})\n`);
 ////////////////////////////////////////
 
 console.log("Workflows:");
-for (const wf of ["reconstruction.md", "style.md", "split.md", "extract.md", "synthesize.md", "audit.md", "integrate.md"]) {
+for (const wf of ["reconstruction.md", "style.md", "split.md", "add.md", "extract.md", "synthesize.md", "audit.md", "integrate.md"]) {
   copyFile(
     join(scriptDir, "workflows", wf),
     join(latReverseDir, "workflows", wf)
@@ -110,7 +110,7 @@ copyFile(
 ////////////////////////////////////////
 
 console.log("\nCommands:");
-for (const cmd of ["lat-rev-split.md", "lat-rev-reconstruct.md", "lat-rev-integrate.md", "lat-rev-next.md"]) {
+for (const cmd of ["lat-rev-split.md", "lat-rev-add.md", "lat-rev-reconstruct.md", "lat-rev-integrate.md", "lat-rev-next.md"]) {
   copyFile(
     join(scriptDir, "commands", cmd),
     join(opencodeDir, "commands", cmd)

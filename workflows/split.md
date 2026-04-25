@@ -2,7 +2,18 @@
 
 ## Goal
 
-Decompose the codebase into concept candidates. Each candidate represents a distinct unit of responsibility defined by behavior or guarantee, not by file structure.
+Decompose a scope into concept candidates. Each candidate represents a distinct unit of responsibility defined by behavior or guarantee, not by file structure.
+
+## Scoping
+
+`$scope` controls how much of the codebase to decompose:
+
+- **No scope** — decompose the entire project
+- **Directory** (e.g., `src/auth/`) — decompose only that subsystem
+- **Glob** (e.g., `src/**/*.ts`) — decompose matching files
+- **Natural language** (e.g., "the authentication layer") — identify relevant files first, then decompose
+
+When scoped to a subsystem, only propose concepts whose `source_files` fall within that scope. Do not propose concepts that span outside the scope — those should be split separately or added individually via `/lat-rev-add`.
 
 ## Pipeline-aware behavior
 

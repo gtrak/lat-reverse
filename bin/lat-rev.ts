@@ -339,6 +339,44 @@ function cmdSnapshot() {
   output({ ok: true, concept: conceptId, source_sha: head });
 }
 
+function cmdConceptAdd() {
+  const conceptId = cleanArgs[2];
+  const nameIdx = cleanArgs.indexOf("--name");
+  const filesIdx = cleanArgs.indexOf("--files");
+
+  if (!conceptId || nameIdx === -1 || filesIdx === -1) {
+    console.error("usage: lat-rev concept add <id> --name <name> --files <f1,f2,...>");
+    process.exit(1);
+  }
+
+  const name = cleanArgs[nameIdx + 1];
+  const files = cleanArgs[filesIdx + 1]?.split(",").filter(Boolean) || [];
+
+  if (!name) {
+    console.error("error: --name requires a value");
+    process.exit(1);
+  }
+
+  const state = readState();
+
+  if (state.concepts[conceptId]) {
+    console.error(`error: concept \"${conceptId}\" already exists`);
+    process.exit(1);
+  }
+
+  state.concepts[conceptId] = {
+    name,
+    phase: "candidate",
+    source_files: files,
+    edges: { depends_on: [], refines: [], constrains: [] },
+    source_sha: "",
+  };
+  writeStateAtomic(state);
+
+  output({ ok: true, id: conceptId, name, source_files: files });
+}
+
+
 // ---- Dispatch ----
 
 const command = cleanArgs[0];
@@ -347,12 +385,14 @@ switch (command) {
   case "init":
     cmdInit();
     break;
-  case "concept": {
+  case 'concept': {
     const sub = cleanArgs[1];
-    if (sub === "edge") {
+    if (sub === 'edge') {
       cmdConceptEdge();
+    } else if (sub === 'add') {
+      cmdConceptAdd();
     } else {
-      console.error("usage: lat-rev concept edge <id> <edge_type> <target_id>");
+      console.error('usage: lat-rev concept <edge|add> ...');
       process.exit(1);
     }
     break;
@@ -371,6 +411,7 @@ switch (command) {
 
 Usage:
   lat-rev init [--src-dir <path>] [--force]
+  lat-rev concept add <id> --name <name> --files <f1,f2,...>
   lat-rev concept edge <id> <edge_type> <target_id>
   lat-rev status [<concept_id>]
   lat-rev drift [<concept_id>]
@@ -380,5 +421,4 @@ Edge types: depends_on, refines, constrains
 
 Global options:
   --json    machine-readable output`);
-    process.exit(command ? 1 : 0);
 }
