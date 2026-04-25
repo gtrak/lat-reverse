@@ -2,7 +2,7 @@
 
 ## Goal
 
-Run the full reconstruction pipeline autonomously: split → reconstruct all candidates → integrate. No review gates. Skips concepts that already exist in `state.json`.
+Run the full reconstruction pipeline autonomously: split → reconstruct all candidates → integrate. No review gates (except integrate overlaps). Skips concepts that already exist in `state.json`.
 
 ## Scoping
 
@@ -16,24 +16,29 @@ Before proposing new candidates, check `state.json`. Any concept ID that already
 
 ### 1. Split (no review gate)
 
-Explore the scope, identify concept candidates, add all of them via `bun run .lat-reverse/bin/lat-rev.ts concept add` without asking for approval.
+Explore the scope, identify concept candidates, add all of them via `bun run .lat-reverse/bin/lat-rev.ts concept add` without asking for approval. Add edges via `bun run .lat-reverse/bin/lat-rev.ts concept edge`.
 
 ### 2. Reconstruct all candidates (no review gates)
 
-For each concept with `phase: "candidate"`, run the full reconstruct pipeline:
+For each concept with `phase: "candidate"`, run the full reconstruct pipeline. Use the subagent prompt templates from each phase workflow (`extract.md`, `synthesize.md`, `audit.md`). No review gates — auto-approve each phase.
 
-- **Extract**: Launch explore subagent with extract + reconstruction workflow content. Write output to `.lat-reverse/concepts/<id>/extraction.md`. Promote via `bun run .lat-reverse/bin/lat-rev.ts concept promote <id> --phase extracted`.
-- **Synthesize**: Launch general subagent with synthesize + reconstruction + style workflow content + extraction content inline. Write output to `.lat-reverse/concepts/<id>/spec.md`. Promote via `bun run .lat-reverse/bin/lat-rev.ts concept promote <id> --phase specified`.
-- **Audit**: Launch explore subagent with audit + reconstruction workflow content + spec content + source file paths. Write output to `.lat-reverse/concepts/<id>/audit.md`. If audit found `bug` or `spec_error` findings, auto-correct by re-launching synthesis with the audit findings + original extraction. Write corrected spec. Re-run audit. Repeat until clean or only `undocumented_behavior` findings remain (max 3 cycles). Then promote via `bun run .lat-reverse/bin/lat-rev.ts concept promote <id> --phase audited`.
-- **Snapshot**: Run `bun run .lat-reverse/bin/lat-rev.ts snapshot <id>`.
+Auto-correct on audit: if audit found `bug` or `spec_error` findings, re-launch synthesis using the **auto-correct prompt template** from `synthesize.md` with the audit findings + original extraction. Write corrected spec. Re-run audit. Repeat until clean or only `undocumented_behavior` findings remain (max 3 cycles). Then promote.
+
+Per-concept sequence:
+1. Extract → write extraction.md → promote to extracted
+2. Synthesize → write spec.md → promote to specified
+3. Audit → write audit.md → auto-correct if needed → promote to audited
+4. Snapshot
 
 ### 3. Integrate (pause on overlap conflicts)
 
-For each concept with `phase: "audited"`, run integrate. If overlap is detected with existing `lat.md/` content, **pause and ask the user** to resolve. Otherwise, write to `lat.md/`, annotate source files, resolve placeholders, update index files, and run `lat check`.
+Write all audited concepts to `lat.md/` first — do not resolve placeholders until all concepts in the batch are written.
+
+If overlap is detected with existing `lat.md/` content, **pause and ask the user** to resolve. Otherwise, write to `lat.md/`, annotate source files, resolve placeholders (check batch first, then `lat locate`), update index files, and run `lat check`.
 
 ## Rules
 
-- Each phase still uses `Task` subagents for heavy work — the orchestrator just auto-approves instead of asking the user.
+- Each phase uses `Task` subagents for heavy work — auto-approve instead of review gates.
 - Subagents return text, orchestrator writes files.
 - All state changes go through the CLI.
 - On integrate overlap: always pause. Never auto-merge.

@@ -18,7 +18,7 @@ Every statement in a spec must remain true if the implementation is completely r
 candidate → extracted → specified → audited
 ```
 
-Each phase is interactive — artifacts are presented for review before advancing.
+Each phase is interactive — artifacts are presented for review before advancing. The auto mode (`/lat-rev-auto`) skips review gates and auto-corrects on audit findings.
 
 ## Quick start
 
@@ -37,10 +37,12 @@ This creates:
 
 | Path | Purpose |
 |---|---|
-| `.opencode/skills/lat-reconstruction/SKILL.md` | Core workflow rules |
-| `.opencode/skills/lat-style/SKILL.md` | Formatting rules |
+| `.lat-reverse/workflows/` | Phase workflows + shared rules (reconstruction, style, extract, synthesize, audit, integrate, split, add, auto) |
+| `.opencode/skills/lat-reconstruction/SKILL.md` | Discovery doc — workflow table, command table, lifecycle |
 | `.opencode/commands/lat-rev-split.md` | Decompose codebase into candidates |
-| `.opencode/commands/lat-rev-reconstruct.md` | Run extraction → synthesis → audit |
+| `.opencode/commands/lat-rev-add.md` | Identify a single concept from a file/small scope |
+| `.opencode/commands/lat-rev-reconstruct.md` | Run extraction → synthesis → audit (interactive) |
+| `.opencode/commands/lat-rev-auto.md` | Full autonomous pipeline (split → reconstruct all → integrate) |
 | `.opencode/commands/lat-rev-integrate.md` | Write specs into `lat.md/` |
 | `.opencode/commands/lat-rev-next.md` | Show workflow status |
 | `.lat-reverse/bin/lat-rev.ts` | State management CLI |
@@ -50,24 +52,38 @@ This creates:
 ## Usage (in opencode)
 
 ```
-/lat-rev-split                  Decompose the codebase into concept candidates
-/lat-rev-reconstruct <id>       Run the full pipeline for a concept
-/lat-rev-integrate [<id>]       Write audited specs into lat.md/
-/lat-rev-next [<id>]            Show status and recommended next action
+/lat-rev-split [scope]           Decompose a scope into concept candidates
+/lat-rev-add <file|scope>        Identify a single concept from a file or small scope
+/lat-rev-reconstruct <id>        Run the full pipeline for a concept (interactive)
+/lat-rev-auto [scope]           Full autonomous pipeline (no review gates)
+/lat-rev-integrate [<id>]        Write audited specs into lat.md/
+/lat-rev-next [<id>]             Show status and recommended next action
 ```
 
 ## CLI
 
 ```bash
 bun run .lat-reverse/bin/lat-rev.ts init [--src-dir <path>] [--force]
+bun run .lat-reverse/bin/lat-rev.ts concept add <id> --name "<name>" --files <f1,f2,...>
+bun run .lat-reverse/bin/lat-rev.ts concept promote <id> --phase <extracted|specified|audited>
+bun run .lat-reverse/bin/lat-rev.ts concept reset <id>
+bun run .lat-reverse/bin/lat-rev.ts concept show <id>
 bun run .lat-reverse/bin/lat-rev.ts concept edge <id> <edge_type> <target_id>
-bun run .lat-reverse/bin/lat-rev.ts status [<concept_id>]
-bun run .lat-reverse/bin/lat-rev.ts drift [<concept_id>]
-bun run .lat-reverse/bin/lat-rev.ts snapshot <concept_id>
+bun run .lat-reverse/bin/lat-rev.ts status
+bun run .lat-reverse/bin/lat-rev.ts drift [<id>] [--json]
+bun run .lat-reverse/bin/lat-rev.ts snapshot <id>
 
 # Edge types: depends_on, refines, constrains
 # Global flag: --json for machine-readable output
 ```
+
+## Architecture
+
+- **Workflows** hold substance (what to do, subagent prompt templates, rules)
+- **Commands** hold orchestration (how to run subagents, review gates, CLI calls)
+- **Skills** are discovery/index documents pointing to workflows and commands
+- Subagents are read-only (return text), orchestrator handles all file writes
+- All state mutations go through the CLI
 
 ## Drift detection
 
