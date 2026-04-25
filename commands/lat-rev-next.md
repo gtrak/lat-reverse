@@ -12,10 +12,10 @@ No argument example:
 ```
 Phase: candidate(3) extracted(1) specified(2) audited(1)
 2 concepts STALE: c_playfield (src/board.ts), c_tetromino_shapes (src/pieces.ts)
-Recommended: /lat-reverse c_playfield (source changed since last extraction)
+Recommended: /lat-rev-reconstruct c_playfield (source changed since last extraction)
 ```
 
 With concept_id:
 ```
-c_playfield → specified → Next: /lat-reverse c_playfield will run audit phase
+c_playfield → specified → Next: /lat-rev-reconstruct c_playfield will run audit phase
 ```

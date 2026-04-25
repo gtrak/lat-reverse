@@ -126,7 +126,7 @@ copySkillOrCommand(
 console.log("\nCommands:");
 ensureDir(join(opencodeDir, "commands"));
 
-for (const cmd of ["lat-rev-split.md", "lat-reverse.md", "lat-rev-integrate.md", "lat-rev-next.md"]) {
+for (const cmd of ["lat-rev-split.md", "lat-rev-reconstruct.md", "lat-rev-integrate.md", "lat-rev-next.md"]) {
   copySkillOrCommand(
     join(scriptDir, "commands"),
     join(opencodeDir, "commands"),
