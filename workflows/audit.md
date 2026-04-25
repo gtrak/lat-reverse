@@ -29,25 +29,22 @@ Classify each finding as:
 
 ## Subagent type
 
-`explore` — reads spec + source files and compares them.
+`general` — reads spec + source files, writes audit.md, returns only the file path.
 
 ## Subagent prompt template
 
 When launching an audit subagent, include this in the prompt:
 
-> Compare the following spec against the source files. You are the Auditor — report only contradictions, mismatches, violations, interface gaps, and implementation leakage. Do NOT rewrite, fix, or suggest changes. Classify each finding as bug, spec_error, undocumented_behavior, or missing_interface. Run "No How" lint: flag implementation-specific statements. Return the full audit as text. Do not write any files.
+> Compare the spec at `<spec_path>` against the source files listed below. Read the spec file first. You are the Auditor — report only contradictions, mismatches, violations, interface gaps, and implementation leakage. Do NOT rewrite, fix, or suggest changes. Classify each finding as bug, spec_error, undocumented_behavior, or missing_interface. Run "No How" lint: flag implementation-specific statements.
 >
-> Spec: <paste spec content here>
+> Write the full audit to: `<output_path>` (create parent directories if needed).
+> Return only: "Written: <output_path>" in your final message.
+>
 > Source files: <list source file paths here>
 > Context: <paste reconstruction.md content here>
 
-## What happens after audit
-
-The orchestrator presents findings to the user with three options:
-- **Fix spec** — re-run synthesis to correct the spec, then re-audit
-- **Fix code** — user edits source files, then re-audit
-- **Accept findings** — promote to audited with known gaps recorded in audit.md
-
 ## Output
 
-Return the full audit as text in your final message. The orchestrator will write it to `.lat-reverse/concepts/<concept_id>/audit.md`.
+The subagent writes the audit directly to `.lat-reverse/concepts/<concept_id>/audit.md`.
+It returns only a single line: `Written: .lat-reverse/concepts/<concept_id>/audit.md`.
+The orchestrator reads that file only if auto-correct is needed — no content passing.

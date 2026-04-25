@@ -36,7 +36,7 @@ Verify coverage: run `bun run .lat-reverse/bin/lat-rev.ts concept coverage --jso
 
 ### 2. Reconstruct all candidates (no review gates)
 
-For each concept with `phase: "candidate"`, run the full reconstruct pipeline. Use the subagent prompt templates and subagent types from each phase workflow (`extract.md` → `explore`, `synthesize.md` → `general`, `audit.md` → `explore`). No review gates — auto-approve each phase.
+For each concept with `phase: "candidate"`, run the full reconstruct pipeline. Use the subagent prompt templates from each phase workflow (`extract.md` → `general`, `synthesize.md` → `general`, `audit.md` → `general`). No review gates — auto-approve each phase.
 
 Auto-correct on audit: if audit found `bug` or `spec_error` findings, re-launch synthesis using the **auto-correct prompt template** from `synthesize.md` with the audit findings + original extraction. Write corrected spec. Re-run audit. Repeat until clean or only `undocumented_behavior` findings remain (max 3 cycles). Then promote.
 
@@ -65,8 +65,9 @@ bun run .lat-reverse/bin/lat-rev.ts concept promote-batch --from audited --to in
 
 ## Rules
 
-- Each phase uses `build` subagents for heavy work — auto-approve instead of review gates.
-- Subagents return text, orchestrator writes files.
-- All state changes go through the CLI.
+- Each phase uses `general` subagents for all three phases (extract, synthesize, audit).
+- **Subagents write their own output files directly** and return only `"Written: <path>"`. The orchestrator passes file paths between phases, not file content. This keeps the orchestrator's context window small regardless of file size.
+- All state changes (promote, snapshot) go through the CLI.
 - On integrate overlap: always pause. Never auto-merge.
 - Use batch CLI commands (`add-batch`, `promote-batch`, `snapshot --all`) instead of per-concept calls.
+- Auto-correct flow: if audit finds `bug` or `spec_error`, read the audit.md and extraction.md files and pass their *paths* to the re-synthesis subagent (not their content). Re-synthesis reads both files itself and overwrites spec.md. Re-audit reads the new spec.md. Repeat max 3 cycles, then promote.

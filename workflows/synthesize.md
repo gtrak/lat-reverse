@@ -31,18 +31,24 @@ Follow all lat-style rules. Compress: ~5 bullets/section (soft target), merge ov
 
 When launching a synthesis subagent, include this in the prompt:
 
-> Produce a lat-style spec from the following extraction. You are the Synthesizer — state purpose, interface contracts (using domain concepts, not type shapes), invariants, constraints, and rationale only. Do NOT reference control flow, data structures, or function names. Use [[?concept-id]] placeholders for references to not-yet-integrated concepts. Every statement must survive a full rewrite. Return the full spec as text. Do not write any files.
+> Produce a lat-style spec from the extraction at: `<extraction_path>`. Read that file first. You are the Synthesizer — state purpose, interface contracts (using domain concepts, not type shapes), invariants, constraints, and rationale only. Do NOT reference control flow, data structures, or function names. Use [[?concept-id]] placeholders for references to not-yet-integrated concepts. Every statement must survive a full rewrite.
 >
-> Extraction: <paste extraction content here>
+> Write the full spec to: `<output_path>` (create parent directories if needed).
+> Return only: "Written: <output_path>" in your final message.
+>
 > Context: <paste reconstruction.md + style.md content here>
 
 ### For auto-correct (re-synthesis after audit findings)
 
-> The previous spec had these issues: <paste audit findings>. Produce a corrected spec addressing these issues. You are the Synthesizer — same constraints as before. Return the full corrected spec as text. Do not write any files.
+> The previous spec had these issues: <paste audit findings>. Produce a corrected spec addressing these issues. Read the original extraction at `<extraction_path>`. You are the Synthesizer — same constraints as before.
 >
-> Original extraction: <paste extraction content here>
+> Write the corrected spec to: `<output_path>` (overwrite existing).
+> Return only: "Written: <output_path>" in your final message.
+>
 > Context: <paste reconstruction.md + style.md content here>
 
 ## Output
 
-Return the full spec as text in your final message. The orchestrator will write it to `.lat-reverse/concepts/<concept_id>/spec.md`.
+The subagent writes the spec directly to `.lat-reverse/concepts/<concept_id>/spec.md`.
+It returns only a single line: `Written: .lat-reverse/concepts/<concept_id>/spec.md`.
+The orchestrator uses that path as input for the audit subagent — no content passing.

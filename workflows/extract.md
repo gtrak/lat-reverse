@@ -23,17 +23,22 @@ Only read files listed in `source_files`. Do not read state files, project confi
 
 ## Subagent type
 
-`explore` — reads source files and reports evidence.
+`general` — reads source files, writes extraction.md, returns only the file path.
 
 ## Subagent prompt template
 
 When launching an extraction subagent, include this in the prompt:
 
-> Read the following source files and extract responsibilities, interface surfaces (see the interface definition in the Context below — enumerate each public surface, its inputs, outputs, error contracts, and supporting code evidence), invariants (with code evidence + line refs), and failure modes. You are the Extractor — report only observable behavior and evidence. Do NOT infer intent or rationale. Return the full extraction as text. Do not write any files.
+> Read the following source files and extract responsibilities, interface surfaces (see the interface definition in the Context below — enumerate each public surface, its inputs, outputs, error contracts, and supporting code evidence), invariants (with code evidence + line refs), and failure modes. You are the Extractor — report only observable behavior and evidence. Do NOT infer intent or rationale.
+>
+> Write the full extraction to: `<output_path>` (create parent directories if needed).
+> Return only: "Written: <output_path>" in your final message.
 >
 > Source files: <list source_files here>
 > Context: <paste reconstruction.md content here>
 
 ## Output
 
-Return the full extraction as text in your final message. The orchestrator will write it to `.lat-reverse/concepts/<concept_id>/extraction.md`.
+The subagent writes the extraction directly to `.lat-reverse/concepts/<concept_id>/extraction.md`.
+It returns only a single line: `Written: .lat-reverse/concepts/<concept_id>/extraction.md`.
+The orchestrator uses that path as input for the synthesis subagent — no content passing.
