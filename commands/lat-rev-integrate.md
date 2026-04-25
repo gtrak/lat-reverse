@@ -35,7 +35,7 @@ For any matches found in layers 1-2, launch an explore subagent to:
 
 ### Resolution
 
-If layers disagree or the explore subagent finds partial overlap, highlight the inconsistency. Present the overlap report to the user. **No auto-merge** — always present both versions and let the user decide how to resolve.
+If layers disagree or the explore subagent finds partial overlap, highlight the inconsistency. Output the overlap report as normal text. Then use the `question` tool with a concise question like "How to resolve overlap on <concept>?" and options like `Use new spec` / `Keep existing` / `I'll decide manually`. **No auto-merge** — always present both versions and let the user decide how to resolve.
 
 ## Write to lat.md/
 

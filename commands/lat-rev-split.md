@@ -34,7 +34,7 @@ Before proposing concepts, check existing state:
    - `source_files` — files this concept was extracted from
    - `edges` — inferred relationships to other concepts (existing or new)
 3. **Enforce unique IDs**: Disambiguate when two scopes produce candidates with the same name.
-4. **Review gate**: Present candidates and edges to the user via the `question` tool. User can approve, request changes, or provide feedback.
+4. **Review gate**: Output your proposed candidates and edges as normal text first. Then use the `question` tool with a concise question like "Approve these candidates?" and options like `Approve all` / `I have changes`. Do NOT put the full candidate list inside the question tool — the user already saw it in your output.
 5. **Write state**: After approval, write each candidate to `.lat-reverse/state.json` as a concept with `phase: "candidate"`. Use the state schema:
    ```json
    {

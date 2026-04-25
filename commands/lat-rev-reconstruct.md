@@ -29,7 +29,7 @@ Launch a subagent with the **Extractor** role. It must:
 - No interpretation, no intent inference. Evidence only.
 - Write to `.lat-reverse/concepts/<concept_id>/extraction.md`.
 
-**Review gate**: Present `extraction.md` to the user via the `question` tool. If feedback is given, re-run this phase in a fresh subagent with the feedback incorporated. After approval, update the concept's phase to `extracted` in `state.json`.
+**Review gate**: Output the extraction as normal text (or note that it was written to `extraction.md`). Then use the `question` tool with a concise question like "Approve extraction?" and options like `Approve` / `I have feedback`. Do NOT put the full artifact content inside the question tool — the user already saw it in your output. If feedback is given, re-run this phase in a fresh subagent with the feedback incorporated. After approval, update the concept's phase to `extracted` in `state.json`.
 
 ## Phase 2 — Synthesis (ROLE: Synthesizer, isolated subagent)
 
@@ -42,7 +42,7 @@ Launch a subagent with the **Synthesizer** role. It must:
 - Use `[[?concept-id]]` placeholders for references to not-yet-integrated concepts.
 - Write to `.lat-reverse/concepts/<concept_id>/spec.md`.
 
-**Review gate**: Present `spec.md` to the user via the `question` tool. If feedback is given, re-run this phase in a fresh subagent with the feedback incorporated. After approval, update the concept's phase to `specified` in `state.json`.
+**Review gate**: Output the spec as normal text (or note that it was written to `spec.md`). Then use the `question` tool with a concise question like "Approve spec?" and options like `Approve` / `I have feedback`. Do NOT put the full artifact content inside the question tool — the user already saw it in your output. If feedback is given, re-run this phase in a fresh subagent with the feedback incorporated. After approval, update the concept's phase to `specified` in `state.json`.
 
 ## Phase 3 — Audit (ROLE: Auditor, isolated subagent)
 
@@ -54,7 +54,7 @@ Launch a subagent with the **Auditor** role. It must:
 - Classify each finding as `bug`, `spec_error`, or `undocumented_behavior`.
 - Write to `.lat-reverse/concepts/<concept_id>/audit.md`.
 
-**Review gate**: Present `audit.md` to the user via the `question` tool. If feedback is given, re-run this phase in a fresh subagent with the feedback incorporated. After approval, update the concept's phase to `audited` in `state.json`.
+**Review gate**: Output the audit as normal text (or note that it was written to `audit.md`). Then use the `question` tool with a concise question like "Approve audit?" and options like `Approve` / `I have feedback`. Do NOT put the full artifact content inside the question tool — the user already saw it in your output. If feedback is given, re-run this phase in a fresh subagent with the feedback incorporated. After approval, update the concept's phase to `audited` in `state.json`.
 
 ## Edge updates
 
