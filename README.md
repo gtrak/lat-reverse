@@ -40,11 +40,8 @@ This creates:
 | `.opencode/skills/lat-reconstruction/SKILL.md` | Core workflow rules |
 | `.opencode/skills/lat-style/SKILL.md` | Formatting rules |
 | `.opencode/commands/lat-rev-split.md` | Decompose codebase into candidates |
-
 | `.opencode/commands/lat-rev-reconstruct.md` | Run extraction → synthesis → audit |
-
 | `.opencode/commands/lat-rev-integrate.md` | Write specs into `lat.md/` |
-
 | `.opencode/commands/lat-rev-next.md` | Show workflow status |
 | `.lat-reverse/bin/lat-rev.ts` | State management CLI |
 | `.lat-reverse/state.json` | Concept index + metadata |
