@@ -112,16 +112,10 @@ ensureDir(join(latReverseDir, "concepts"));
 
 console.log("\nSkills:");
 ensureDir(join(opencodeDir, "skills/lat-reconstruction"));
-ensureDir(join(opencodeDir, "skills/lat-style"));
 
 copySkillOrCommand(
   join(scriptDir, "skills/lat-reconstruction"),
   join(opencodeDir, "skills/lat-reconstruction"),
-  "SKILL.md"
-);
-copySkillOrCommand(
-  join(scriptDir, "skills/lat-style"),
-  join(opencodeDir, "skills/lat-style"),
   "SKILL.md"
 );
 
