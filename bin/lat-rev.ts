@@ -426,6 +426,28 @@ function cmdConceptPromote() {
   output({ ok: true, id: conceptId, phase: concept.phase });
 }
 
+function cmdConceptReset() {
+  const conceptId = cleanArgs[2];
+
+  if (!conceptId) {
+    console.error("usage: lat-rev concept reset <id>");
+    process.exit(1);
+  }
+
+  const state = readState();
+  const concept = state.concepts[conceptId];
+  if (!concept) {
+    console.error(`error: concept "${conceptId}" not found`);
+    process.exit(1);
+  }
+
+  concept.phase = "candidate";
+  concept.source_sha = "";
+  writeStateAtomic(state);
+
+  output({ ok: true, id: conceptId, phase: concept.phase });
+}
+
 // ---- Dispatch ----
 
 const command = cleanArgs[0];
@@ -442,8 +464,10 @@ switch (command) {
       cmdConceptAdd();
     } else if (sub === 'promote') {
       cmdConceptPromote();
+    } else if (sub === 'reset') {
+      cmdConceptReset();
     } else {
-      console.error('usage: lat-rev concept <add|edge|promote> ...');
+      console.error('usage: lat-rev concept <add|edge|promote|reset> ...');
       process.exit(1);
     }
     break;
@@ -464,6 +488,7 @@ Usage:
   lat-rev init [--src-dir <path>] [--force]
   lat-rev concept add <id> --name <name> --files <f1,f2,...>
   lat-rev concept promote <id> --phase <extracted|specified|audited>
+  lat-rev concept reset <id>
   lat-rev concept edge <id> <edge_type> <target_id>
   lat-rev status [<concept_id>]
   lat-rev drift [<concept_id>]
