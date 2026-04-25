@@ -10,7 +10,7 @@ Read `.lat-reverse/workflows/integrate.md` and `.lat-reverse/workflows/style.md`
 
 For each concept:
 
-1. Run overlap detection layers 1-2 via `lat locate` / `lat search` CLI commands. For layer 3, launch a `Task` explore subagent with the integrate workflow + the new spec content + matched lat.md/ file paths. Tell it: "Read these files and report which claims match, diverge, or are missing. Do not write any files."
+1. Run overlap detection layers 1-2 via `lat locate` / `lat search` CLI commands. For layer 3, launch a `build` explore subagent with the integrate workflow + the new spec content + matched lat.md/ file paths. Tell it: "Read these files and report which claims match, diverge, or are missing. Do not write any files."
 2. **Review gate** (if overlap found): Output overlap report as normal text. Use `question` tool: "How to resolve overlap on <concept>?" with `Use new spec` / `Keep existing` / `I'll decide manually`.
 3. Write to `lat.md/` following integrate workflow rules. Use explore subagents to read any lat.md/ files you haven't already seen. **Write all concepts in the batch to `lat.md/` before resolving placeholders.**
 4. Write `@lat:` annotations in source files.

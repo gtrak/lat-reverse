@@ -38,7 +38,7 @@ If overlap is detected with existing `lat.md/` content, **pause and ask the user
 
 ## Rules
 
-- Each phase uses `Task` subagents for heavy work — auto-approve instead of review gates.
+- Each phase uses `build` subagents for heavy work — auto-approve instead of review gates.
 - Subagents return text, orchestrator writes files.
 - All state changes go through the CLI.
 - On integrate overlap: always pause. Never auto-merge.
