@@ -1,3 +1,5 @@
 .lat-reverse/
 .opencode/
 opencode.json
+node_modules/
+bun.lock

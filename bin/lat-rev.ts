@@ -5,12 +5,11 @@ import {
   readFileSync,
   existsSync,
   renameSync,
-  unlinkSync,
 } from "fs";
 import { join, resolve } from "path";
 import { execSync } from "child_process";
 
-type Phase = "candidate" | "extracted" | "specified" | "audited";
+type Phase = "candidate" | "extracted" | "specified" | "audited" | "integrated";
 
 interface Concept {
   name: string;
@@ -30,7 +29,7 @@ interface State {
   concepts: Record<string, Concept>;
 }
 
-const VALID_PHASES: Phase[] = ["candidate", "extracted", "specified", "audited"];
+const VALID_PHASES: Phase[] = ["candidate", "extracted", "specified", "audited", "integrated"];
 const VALID_EDGE_TYPES = ["depends_on", "refines", "constrains"];
 
 const args = process.argv.slice(2);
@@ -104,6 +103,15 @@ function gitHasUncommitted(dir: string): boolean {
   }
 }
 
+function gitListFiles(dir: string): string[] {
+  try {
+    const result = execSync("git ls-files", { cwd: dir, encoding: "utf-8" }).trim();
+    return result ? result.split("\n").filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
 function nextStep(phase: Phase): string {
   switch (phase) {
     case "candidate":
@@ -114,6 +122,8 @@ function nextStep(phase: Phase): string {
       return "Next: /lat-rev-reconstruct <id> will run audit phase";
     case "audited":
       return "Next: /lat-rev-integrate <id>";
+    case "integrated":
+      return "Integrated. Run /lat-rev-drift to check for source changes.";
   }
 }
 
@@ -193,9 +203,9 @@ function cmdStatus() {
   const head = gitHead(state.source_repo);
   for (const [id, c] of Object.entries(state.concepts)) {
     counts[c.phase] = (counts[c.phase] || 0) + 1;
-    const isStale = head && c.source_sha && head !== c.source_sha;
-    const changedFiles = isStale
-      ? gitChangedFiles(state.source_repo, c.source_sha, head!, c.source_files)
+    const isStale = !!head && !!c.source_sha && head !== c.source_sha;
+    const changedFiles = isStale && head
+      ? gitChangedFiles(state.source_repo, c.source_sha, head, c.source_files)
       : [];
     concepts.push({ id, name: c.name, phase: c.phase, stale: !!isStale, changed_files: changedFiles });
     if (isStale) {
@@ -298,9 +308,14 @@ function cmdDrift() {
 }
 
 function cmdSnapshot() {
+  if (cleanArgs.includes("--all")) {
+    cmdSnapshotAll();
+    return;
+  }
+
   const conceptId = cleanArgs[1];
   if (!conceptId) {
-    console.error("usage: lat-rev snapshot <concept_id>");
+    console.error("usage: lat-rev snapshot <concept_id>  OR  lat-rev snapshot --all [--phase <phase>]");
     process.exit(1);
   }
 
@@ -325,6 +340,38 @@ function cmdSnapshot() {
   writeStateAtomic(state);
 
   output({ ok: true, concept: conceptId, source_sha: head });
+}
+
+function cmdSnapshotAll() {
+  const phaseIdx = cleanArgs.indexOf("--phase");
+  const phaseFilter = phaseIdx !== -1 ? cleanArgs[phaseIdx + 1] as Phase : undefined;
+
+  if (phaseFilter && !VALID_PHASES.includes(phaseFilter)) {
+    console.error(`error: --phase must be one of: ${VALID_PHASES.join(", ")}`);
+    process.exit(1);
+  }
+
+  const state = readState();
+
+  if (gitHasUncommitted(state.source_repo)) {
+    console.warn("warning: uncommitted changes exist in source repo. Snapshot may be inaccurate.");
+  }
+
+  const head = gitHead(state.source_repo);
+  if (!head) {
+    console.error("error: cannot get git HEAD");
+    process.exit(1);
+  }
+
+  let count = 0;
+  for (const [id, concept] of Object.entries(state.concepts)) {
+    if (phaseFilter && concept.phase !== phaseFilter) continue;
+    concept.source_sha = head;
+    count++;
+  }
+
+  writeStateAtomic(state);
+  output({ ok: true, snapshotted: count, source_sha: head });
 }
 
 function cmdConceptAdd() {
@@ -364,13 +411,77 @@ function cmdConceptAdd() {
   output({ ok: true, id: conceptId, name, source_files: files });
 }
 
+function cmdConceptAddBatch() {
+  const fileIdx = cleanArgs.indexOf("--file");
+  if (fileIdx === -1) {
+    console.error("usage: lat-rev concept add-batch --file <path|->");
+    console.error("  JSON format: [{\"id\": \"...\", \"name\": \"...\", \"source_files\": [...]}]");
+    console.error("  Use --file - to read from stdin");
+    process.exit(1);
+  }
+
+  const filePath = cleanArgs[fileIdx + 1];
+  let input: string;
+
+  if (filePath === "-") {
+    input = readFileSync("/dev/stdin", "utf-8");
+  } else {
+    if (!existsSync(filePath)) {
+      console.error(`error: file not found: ${filePath}`);
+      process.exit(1);
+    }
+    input = readFileSync(filePath, "utf-8");
+  }
+
+  let entries: Array<{ id: string; name: string; source_files: string[] }>;
+  try {
+    entries = JSON.parse(input);
+  } catch {
+    console.error("error: invalid JSON input");
+    process.exit(1);
+  }
+
+  if (!Array.isArray(entries) || entries.length === 0) {
+    console.error("error: input must be a non-empty JSON array");
+    process.exit(1);
+  }
+
+  for (const entry of entries) {
+    if (!entry.id || !entry.name || !Array.isArray(entry.source_files)) {
+      console.error(`error: each entry must have id, name, and source_files (array). Failed on: ${JSON.stringify(entry)}`);
+      process.exit(1);
+    }
+  }
+
+  const state = readState();
+
+  for (const entry of entries) {
+    if (state.concepts[entry.id]) {
+      console.error(`error: concept "${entry.id}" already exists`);
+      process.exit(1);
+    }
+  }
+
+  for (const entry of entries) {
+    state.concepts[entry.id] = {
+      name: entry.name,
+      phase: "candidate",
+      source_files: entry.source_files,
+      edges: { depends_on: [], refines: [], constrains: [] },
+      source_sha: "",
+    };
+  }
+  writeStateAtomic(state);
+
+  output({ ok: true, added: entries.length, ids: entries.map((e) => e.id) });
+}
 
 function cmdConceptPromote() {
   const conceptId = cleanArgs[2];
   const phaseIdx = cleanArgs.indexOf("--phase");
 
   if (!conceptId || phaseIdx === -1) {
-    console.error("usage: lat-rev concept promote <id> --phase <extracted|specified|audited>");
+    console.error("usage: lat-rev concept promote <id> --phase <extracted|specified|audited|integrated>");
     process.exit(1);
   }
 
@@ -398,6 +509,51 @@ function cmdConceptPromote() {
   writeStateAtomic(state);
 
   output({ ok: true, id: conceptId, phase: concept.phase });
+}
+
+function cmdConceptPromoteBatch() {
+  const fromIdx = cleanArgs.indexOf("--from");
+  const toIdx = cleanArgs.indexOf("--to");
+
+  if (fromIdx === -1 || toIdx === -1) {
+    console.error("usage: lat-rev concept promote-batch --from <phase> --to <phase>");
+    process.exit(1);
+  }
+
+  const fromPhase = cleanArgs[fromIdx + 1] as Phase;
+  const toPhase = cleanArgs[toIdx + 1] as Phase;
+
+  if (!VALID_PHASES.includes(fromPhase)) {
+    console.error(`error: --from must be one of: ${VALID_PHASES.join(", ")}`);
+    process.exit(1);
+  }
+
+  if (!VALID_PHASES.includes(toPhase)) {
+    console.error(`error: --to must be one of: ${VALID_PHASES.join(", ")}`);
+    process.exit(1);
+  }
+
+  const fromIdx2 = VALID_PHASES.indexOf(fromPhase);
+  const toIdx2 = VALID_PHASES.indexOf(toPhase);
+  if (toIdx2 !== fromIdx2 + 1) {
+    console.error(`error: cannot promote from ${fromPhase} to ${toPhase}. Must advance one step: ${fromPhase} → ${VALID_PHASES[fromIdx2 + 1]}`);
+    process.exit(1);
+  }
+
+  const state = readState();
+  const toPromote = Object.entries(state.concepts).filter(([_, c]) => c.phase === fromPhase);
+
+  if (toPromote.length === 0) {
+    console.error(`error: no concepts at phase "${fromPhase}"`);
+    process.exit(1);
+  }
+
+  for (const [id, concept] of toPromote) {
+    concept.phase = toPhase;
+  }
+  writeStateAtomic(state);
+
+  output({ ok: true, promoted: toPromote.length, from: fromPhase, to: toPhase, ids: toPromote.map(([id]) => id) });
 }
 
 function cmdConceptReset() {
@@ -438,10 +594,10 @@ function cmdConceptShow() {
   }
 
   const head = gitHead(state.source_repo);
-  const isStale = head && concept.source_sha && head !== concept.source_sha;
+  const isStale = !!head && !!concept.source_sha && head !== concept.source_sha;
   const changedFiles =
-    isStale && concept.source_files.length > 0
-      ? gitChangedFiles(state.source_repo, concept.source_sha, head!, concept.source_files)
+    isStale && head && concept.source_files.length > 0
+      ? gitChangedFiles(state.source_repo, concept.source_sha, head, concept.source_files)
       : [];
 
   output({
@@ -454,6 +610,98 @@ function cmdConceptShow() {
     stale: !!isStale,
     changed_files: changedFiles,
   });
+}
+
+function cmdConceptList() {
+  const phaseIdx = cleanArgs.indexOf("--phase");
+  const phaseFilter = phaseIdx !== -1 ? cleanArgs[phaseIdx + 1] as Phase : undefined;
+
+  if (phaseFilter && !VALID_PHASES.includes(phaseFilter)) {
+    console.error(`error: --phase must be one of: ${VALID_PHASES.join(", ")}`);
+    process.exit(1);
+  }
+
+  const state = readState();
+  const entries = Object.entries(state.concepts)
+    .filter(([_, c]) => !phaseFilter || c.phase === phaseFilter)
+    .map(([id, c]) => ({ id, name: c.name, phase: c.phase }));
+
+  if (useJson) {
+    output({ count: entries.length, concepts: entries });
+  } else {
+    if (entries.length === 0) {
+      console.log(phaseFilter ? `No concepts at phase "${phaseFilter}".` : "No concepts yet.");
+      return;
+    }
+    for (const e of entries) {
+      console.log(`  ${e.id} → ${e.phase} (${e.name})`);
+    }
+  }
+}
+
+function cmdConceptNext() {
+  const countIdx = cleanArgs.indexOf("--count");
+  const count = countIdx !== -1 ? parseInt(cleanArgs[countIdx + 1], 10) || 5 : 5;
+
+  const state = readState();
+  const head = gitHead(state.source_repo);
+
+  const scored = Object.entries(state.concepts).map(([id, c]) => {
+    const isStale = !!head && !!c.source_sha && head !== c.source_sha;
+    const phaseIdx = VALID_PHASES.indexOf(c.phase);
+    let priority = phaseIdx;
+    if (isStale) priority += VALID_PHASES.length;
+    return { id, name: c.name, phase: c.phase, stale: !!isStale, priority };
+  });
+
+  scored.sort((a, b) => b.priority - a.priority);
+
+  const next = scored.slice(0, count);
+
+  if (useJson) {
+    output({ count: next.length, concepts: next.map(({ priority, ...rest }) => rest) });
+  } else {
+    if (next.length === 0) {
+      console.log("No concepts to process.");
+      return;
+    }
+    for (const n of next) {
+      const staleMarker = n.stale ? " STALE" : "";
+      console.log(`  ${n.id} → ${n.phase}${staleMarker} (${n.name})`);
+    }
+  }
+}
+
+function cmdConceptCoverage() {
+  const state = readState();
+
+  const allFiles = gitListFiles(state.source_repo);
+  if (allFiles.length === 0) {
+    console.error("error: no tracked files found in source repo");
+    process.exit(1);
+  }
+
+  const covered = new Set<string>();
+  for (const concept of Object.values(state.concepts)) {
+    for (const f of concept.source_files) {
+      covered.add(f);
+    }
+  }
+
+  const uncovered = allFiles.filter((f) => !covered.has(f));
+
+  if (useJson) {
+    output({ total: allFiles.length, covered: covered.size, uncovered });
+  } else {
+    if (uncovered.length === 0) {
+      console.log(`All ${allFiles.length} files covered by concepts.`);
+    } else {
+      console.log(`${uncovered.length} uncovered files (of ${allFiles.length}):`);
+      for (const f of uncovered) {
+        console.log(`  ${f}`);
+      }
+    }
+  }
 }
 
 // ---- Dispatch ----
@@ -470,14 +718,24 @@ switch (command) {
       cmdConceptEdge();
     } else if (sub === 'add') {
       cmdConceptAdd();
+    } else if (sub === 'add-batch') {
+      cmdConceptAddBatch();
     } else if (sub === 'promote') {
       cmdConceptPromote();
+    } else if (sub === 'promote-batch') {
+      cmdConceptPromoteBatch();
     } else if (sub === 'reset') {
       cmdConceptReset();
     } else if (sub === 'show') {
       cmdConceptShow();
+    } else if (sub === 'list') {
+      cmdConceptList();
+    } else if (sub === 'next') {
+      cmdConceptNext();
+    } else if (sub === 'coverage') {
+      cmdConceptCoverage();
     } else {
-      console.error('usage: lat-rev concept <add|edge|promote|reset|show> ...');
+      console.error('usage: lat-rev concept <add|add-batch|edge|promote|promote-batch|reset|show|list|next|coverage> ...');
       process.exit(1);
     }
     break;
@@ -497,15 +755,21 @@ switch (command) {
 Usage:
   lat-rev init [--src-dir <path>] [--force]
   lat-rev concept add <id> --name <name> --files <f1,f2,...>
-  lat-rev concept promote <id> --phase <extracted|specified|audited>
+  lat-rev concept add-batch --file <path|->   (JSON array on stdin if --file -)
+  lat-rev concept promote <id> --phase <extracted|specified|audited|integrated>
+  lat-rev concept promote-batch --from <phase> --to <phase>
   lat-rev concept reset <id>
   lat-rev concept show <id>
   lat-rev concept edge <id> <edge_type> <target_id>
+  lat-rev concept list [--phase <phase>]
+  lat-rev concept next [--count N]
+  lat-rev concept coverage
   lat-rev status
-  lat-rev concept show <id>
   lat-rev drift [<concept_id>]
   lat-rev snapshot <concept_id>
+  lat-rev snapshot --all [--phase <phase>]
 
+Concept lifecycle: candidate → extracted → specified → audited → integrated
 Edge types: depends_on, refines, constrains
 
 Global options:

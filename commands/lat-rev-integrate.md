@@ -6,7 +6,7 @@ Execute this workflow now. Do not describe it — perform each step.
 
 Read `.lat-reverse/workflows/integrate.md` and `.lat-reverse/workflows/style.md`.
 
-`$1`: optional concept_id (default: all audited concepts). Run `bun run .lat-reverse/bin/lat-rev.ts status --json` to find them.
+`$1`: optional concept_id (default: all audited concepts). Run `bun run .lat-reverse/bin/lat-rev.ts concept list --phase audited --json` to find them.
 
 For each concept:
 
@@ -17,5 +17,10 @@ For each concept:
 5. Resolve `[[?...]]` placeholders: first check concepts integrated in this batch, then check existing `lat.md/` via `lat locate`. Resolve `[[?concept-id]]` → proper wiki links where the target exists.
 6. Update index files.
 7. Run `lat check --dir <source_repo>`.
+
+After all concepts are written to `lat.md/`, promote in bulk:
+```
+bun run .lat-reverse/bin/lat-rev.ts concept promote-batch --from audited --to integrated
+```
 
 You handle all writes. Explore subagents are read-only — they gather and return information only.

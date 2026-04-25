@@ -12,11 +12,27 @@ Run the full reconstruction pipeline autonomously: split → reconstruct all can
 
 Before proposing new candidates, check `state.json`. Any concept ID that already exists (at any phase) is skipped. Only truly uncovered files produce new candidates.
 
+## Continuation rules
+
+- **Never stop mid-pipeline.** After completing each concept, immediately proceed to the next. DO NOT stop, summarize, or ask for permission between concepts.
+- The workflow is complete only when `status` shows no candidates/extracted/specified remaining.
+- **Process in groups of 10–20 concepts.** After each group, output a one-line progress count (e.g., "Completed 20/142 candidates") and continue immediately.
+- **If interrupted**, re-running this workflow resumes automatically — already-processed concepts are skipped by the pipeline-aware checks.
+
 ## Pipeline
 
 ### 1. Split (no review gate)
 
-Explore the scope, identify concept candidates, add all of them via `bun run .lat-reverse/bin/lat-rev.ts concept add` without asking for approval. Add edges via `bun run .lat-reverse/bin/lat-rev.ts concept edge`.
+If scope has >20 files or >3 directories, use the hierarchical strategy from `split.md`: one explore subagent per directory, then cross-cutting candidates. If scope is small, a single subagent is fine.
+
+Add all candidates at once using `add-batch`:
+```
+echo '[...]' | bun run .lat-reverse/bin/lat-rev.ts concept add-batch --file -
+```
+
+Add edges via `bun run .lat-reverse/bin/lat-rev.ts concept edge`.
+
+Verify coverage: run `bun run .lat-reverse/bin/lat-rev.ts concept coverage --json`. If any files are uncovered, propose additional candidates and add-batch again.
 
 ### 2. Reconstruct all candidates (no review gates)
 
@@ -30,11 +46,22 @@ Per-concept sequence:
 3. Audit → write audit.md → auto-correct if needed → promote to audited
 4. Snapshot
 
+After processing a group of concepts, promote and snapshot in bulk:
+```
+bun run .lat-reverse/bin/lat-rev.ts concept promote-batch --from <phase> --to <phase>
+bun run .lat-reverse/bin/lat-rev.ts snapshot --all
+```
+
 ### 3. Integrate (pause on overlap conflicts)
 
 Write all audited concepts to `lat.md/` first — do not resolve placeholders until all concepts in the batch are written.
 
 If overlap is detected with existing `lat.md/` content, **pause and ask the user** to resolve. Otherwise, write to `lat.md/`, annotate source files, resolve placeholders (check batch first, then `lat locate`), update index files, and run `lat check`.
+
+After writing all concepts to `lat.md/`, promote in bulk:
+```
+bun run .lat-reverse/bin/lat-rev.ts concept promote-batch --from audited --to integrated
+```
 
 ## Rules
 
@@ -42,3 +69,4 @@ If overlap is detected with existing `lat.md/` content, **pause and ask the user
 - Subagents return text, orchestrator writes files.
 - All state changes go through the CLI.
 - On integrate overlap: always pause. Never auto-merge.
+- Use batch CLI commands (`add-batch`, `promote-batch`, `snapshot --all`) instead of per-concept calls.

@@ -15,7 +15,7 @@ Every statement in a spec must remain true if the implementation is completely r
 ## Concept lifecycle
 
 ```
-candidate → extracted → specified → audited
+candidate → extracted → specified → audited → integrated
 ```
 
 Each phase is interactive — artifacts are presented for review before advancing. The auto mode (`/lat-rev-auto`) skips review gates and auto-corrects on audit findings.
@@ -65,14 +65,21 @@ This creates:
 ```bash
 bun run .lat-reverse/bin/lat-rev.ts init [--src-dir <path>] [--force]
 bun run .lat-reverse/bin/lat-rev.ts concept add <id> --name "<name>" --files <f1,f2,...>
-bun run .lat-reverse/bin/lat-rev.ts concept promote <id> --phase <extracted|specified|audited>
+bun run .lat-reverse/bin/lat-rev.ts concept add-batch --file <path|->   # JSON array on stdin if --file -
+bun run .lat-reverse/bin/lat-rev.ts concept promote <id> --phase <extracted|specified|audited|integrated>
+bun run .lat-reverse/bin/lat-rev.ts concept promote-batch --from <phase> --to <phase>
 bun run .lat-reverse/bin/lat-rev.ts concept reset <id>
 bun run .lat-reverse/bin/lat-rev.ts concept show <id>
 bun run .lat-reverse/bin/lat-rev.ts concept edge <id> <edge_type> <target_id>
+bun run .lat-reverse/bin/lat-rev.ts concept list [--phase <phase>]
+bun run .lat-reverse/bin/lat-rev.ts concept next [--count N]
+bun run .lat-reverse/bin/lat-rev.ts concept coverage
 bun run .lat-reverse/bin/lat-rev.ts status
 bun run .lat-reverse/bin/lat-rev.ts drift [<id>] [--json]
 bun run .lat-reverse/bin/lat-rev.ts snapshot <id>
+bun run .lat-reverse/bin/lat-rev.ts snapshot --all [--phase <phase>]
 
+# Concept lifecycle: candidate → extracted → specified → audited → integrated
 # Edge types: depends_on, refines, constrains
 # Global flag: --json for machine-readable output
 ```

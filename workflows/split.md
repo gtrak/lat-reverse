@@ -15,6 +15,23 @@ Decompose a scope into concept candidates. Each candidate represents a distinct 
 
 When scoped to a subsystem, only propose concepts whose `source_files` fall within that scope. Do not propose concepts that span outside the scope — those should be split separately or added individually via `/lat-rev-add`.
 
+## Granularity targets
+
+- Each concept should cover **1–8 source files**. This is a soft target, not a hard limit.
+- If a candidate would cover **>10 files**, split it further. Large modules decompose into multiple concepts (e.g., `c_auth_session`, `c_auth_validation`, `c_auth_persistence` rather than `c_auth`).
+- A concept covering a single file is fine if that file has distinct responsibilities.
+- Every source file in the scope must appear in at least one concept's `source_files`. After proposing candidates, verify full coverage.
+
+## Hierarchical strategy for large scopes
+
+For scopes with >20 source files or >3 directories:
+
+1. **First pass — identify subsystems**: List top-level directories/modules. Each becomes a split scope.
+2. **Second pass — decompose each subsystem**: For each directory, launch an explore subagent scoped to that directory only. Produce candidates per the granularity targets above.
+3. **Third pass — cross-cutting concepts**: Some responsibilities span directories (e.g., error handling, logging). Propose these last, with `source_files` from across directories.
+
+This ensures each subagent reads a small enough scope to identify fine-grained responsibilities.
+
 ## Pipeline-aware behavior
 
 Before proposing concepts, check existing state:
@@ -25,6 +42,10 @@ Before proposing concepts, check existing state:
    - Already covered by audited concepts whose sources haven't drifted → **skip**
    - Covered by stale concepts → **flag** (suggest `/lat-rev-reconstruct <id>` instead of re-splitting)
    - No coverage → **propose new concepts**
+
+## Coverage verification
+
+After proposing candidates, run `bun run .lat-reverse/bin/lat-rev.ts concept coverage --json` to check for uncovered source files. If any files in the scope are uncovered, propose additional candidates.
 
 ## Subagent type
 
@@ -41,6 +62,28 @@ Each candidate has:
 
 Enforce unique IDs. Disambiguate when two scopes produce candidates with the same name.
 
+## Adding candidates
+
+For a single candidate, use:
+```
+bun run .lat-reverse/bin/lat-rev.ts concept add <id> --name "<name>" --files <f1,f2,...>
+```
+
+For multiple candidates, use `add-batch` with a JSON array on stdin:
+```
+echo '[{"id":"c_x","name":"X","source_files":["a.ts","b.ts"]}]' | bun run .lat-reverse/bin/lat-rev.ts concept add-batch --file -
+```
+
+Or from a file:
+```
+bun run .lat-reverse/bin/lat-rev.ts concept add-batch --file candidates.json
+```
+
+Add edges via:
+```
+bun run .lat-reverse/bin/lat-rev.ts concept edge <id> <edge_type> <target_id>
+```
+
 ## Output
 
-Return the candidate list as text in your final message. The orchestrator will add each via `bun run .lat-reverse/bin/lat-rev.ts concept add` and run `bun run .lat-reverse/bin/lat-rev.ts concept edge` for any relationships.
+Return the candidate list as text in your final message. The orchestrator will add them via the CLI and run `concept edge` for any relationships.
