@@ -2,7 +2,7 @@
 description: Show workflow status and recommended next action
 ---
 
-Run `lat-rev status --json` (or `lat-rev status <concept_id> --json` if an argument is given). Format the output for the user:
+Run `bun run .lat-reverse/bin/lat-rev.ts status --json` (or `bun run .lat-reverse/bin/lat-rev.ts status <concept_id> --json` if an argument is given). Format the output for the user:
 
 - Phase summary: `candidate(N) extracted(N) specified(N) audited(N)`
 - Drift report: list stale concepts with their changed files

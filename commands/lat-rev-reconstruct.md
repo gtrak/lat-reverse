@@ -8,7 +8,7 @@ Read `.lat-reverse/workflows/lat-reconstruction.md` — it references the phase-
 
 `$1`: concept_id (required). If already `audited`, restart from extraction.
 
-If the concept's `source_sha` doesn't match git HEAD, run `lat-rev drift <concept_id> --json`, present drift to user, let them decide before proceeding.
+If the concept's `source_sha` doesn't match git HEAD, run `bun run .lat-reverse/bin/lat-rev.ts drift <concept_id> --json`, present drift to user, let them decide before proceeding.
 
 **You must NOT do extraction, synthesis, or audit work yourself.** Each phase is a `Task` subagent. Your job: launch subagents, present output, run review gates, update state.
 
@@ -35,4 +35,4 @@ If the concept's `source_sha` doesn't match git HEAD, run `lat-rev drift <concep
 
 ### Completion
 
-Run `lat-rev snapshot <concept_id>` to record the current source SHA. Update edges via `lat-rev concept edge` if any emerged during phases.
+Run `bun run .lat-reverse/bin/lat-rev.ts snapshot <concept_id>` to record the current source SHA. Update edges via `bun run .lat-reverse/bin/lat-rev.ts concept edge` if any emerged during phases.

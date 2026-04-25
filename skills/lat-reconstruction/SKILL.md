@@ -33,4 +33,4 @@ All workflow files live in `.lat-reverse/workflows/`:
 candidate → extracted → specified → audited
 ```
 
-State is in `.lat-reverse/state.json`. CLI is `lat-rev` (init, concept edge, status, drift, snapshot).
+State is in `.lat-reverse/state.json`. CLI is at `.lat-reverse/bin/lat-rev.ts` (run via `bun run .lat-reverse/bin/lat-rev.ts`).

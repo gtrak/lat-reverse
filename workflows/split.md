@@ -9,7 +9,7 @@ Decompose the codebase into concept candidates. Each candidate represents a dist
 Before proposing concepts, check existing state:
 
 1. Read `.lat-reverse/state.json` to find existing concepts.
-2. Run `lat-rev drift --json` to identify stale concepts.
+2. Run `bun run .lat-reverse/bin/lat-rev.ts drift --json` to identify stale concepts.
 3. For each source file:
    - Already covered by audited concepts whose sources haven't drifted → **skip**
    - Covered by stale concepts → **flag** (suggest `/lat-rev-reconstruct <id>` instead of re-splitting)
@@ -39,4 +39,4 @@ After approval, write each candidate to `state.json` with:
 }
 ```
 
-For any relationships between new or existing concepts, run `lat-rev concept edge <id> <type> <target>`.
+For any relationships between new or existing concepts, run `bun run .lat-reverse/bin/lat-rev.ts concept edge <id> <type> <target>`.

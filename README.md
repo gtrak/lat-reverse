@@ -62,11 +62,11 @@ This creates:
 ## CLI
 
 ```bash
-lat-rev init [--src-dir <path>] [--force]
-lat-rev concept edge <id> <edge_type> <target_id>
-lat-rev status [<concept_id>]
-lat-rev drift [<concept_id>]
-lat-rev snapshot <concept_id>
+bun run .lat-reverse/bin/lat-rev.ts init [--src-dir <path>] [--force]
+bun run .lat-reverse/bin/lat-rev.ts concept edge <id> <edge_type> <target_id>
+bun run .lat-reverse/bin/lat-rev.ts status [<concept_id>]
+bun run .lat-reverse/bin/lat-rev.ts drift [<concept_id>]
+bun run .lat-reverse/bin/lat-rev.ts snapshot <concept_id>
 
 # Edge types: depends_on, refines, constrains
 # Global flag: --json for machine-readable output
@@ -74,7 +74,7 @@ lat-rev snapshot <concept_id>
 
 ## Drift detection
 
-When source code changes after reconstruction, concepts become stale. `lat-rev drift` compares the stored `source_sha` against the current git HEAD and reports which source files changed. The user decides whether to re-reconstruct on a case-by-case basis.
+When source code changes after reconstruction, concepts become stale. `bun run .lat-reverse/bin/lat-rev.ts drift` compares the stored `source_sha` against the current git HEAD and reports which source files changed. The user decides whether to re-reconstruct on a case-by-case basis.
 
 ## Design principles
 
