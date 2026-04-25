@@ -79,7 +79,7 @@ console.log(`Installing LAT reverse workflow (${mode})\n`);
 console.log("Workflows:");
 ensureDir(join(latReverseDir, "workflows"));
 
-for (const wf of ["lat-reconstruction.md", "lat-style.md"]) {
+for (const wf of ["lat-reconstruction.md", "lat-style.md", "split.md", "extract.md", "synthesize.md", "audit.md", "integrate.md"]) {
   copySkillOrCommand(
     join(scriptDir, "workflows"),
     join(latReverseDir, "workflows"),
