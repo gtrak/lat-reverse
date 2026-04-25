@@ -184,32 +184,6 @@ function cmdConceptEdge() {
 
 function cmdStatus() {
   const state = readState();
-  const conceptId = cleanArgs[1];
-
-  if (conceptId) {
-    const concept = state.concepts[conceptId];
-    if (!concept) {
-      console.error(`error: concept "${conceptId}" not found`);
-      process.exit(1);
-    }
-
-    const head = gitHead(state.source_repo);
-    const isStale = head && concept.source_sha && head !== concept.source_sha;
-    const changedFiles =
-      isStale && concept.source_files.length > 0
-        ? gitChangedFiles(state.source_repo, concept.source_sha, head!, concept.source_files)
-        : [];
-
-    output({
-      id: conceptId,
-      name: concept.name,
-      phase: concept.phase,
-      stale: !!isStale,
-      changed_files: changedFiles,
-      next: nextStep(concept.phase),
-    });
-    return;
-  }
 
   const concepts: Array<{ id: string; name: string; phase: string; stale: boolean; changed_files: string[] }> = [];
   const counts: Record<string, number> = {};
@@ -527,7 +501,8 @@ Usage:
   lat-rev concept reset <id>
   lat-rev concept show <id>
   lat-rev concept edge <id> <edge_type> <target_id>
-  lat-rev status [<concept_id>]
+  lat-rev status
+  lat-rev concept show <id>
   lat-rev drift [<concept_id>]
   lat-rev snapshot <concept_id>
 
