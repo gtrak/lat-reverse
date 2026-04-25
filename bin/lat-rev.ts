@@ -377,6 +377,41 @@ function cmdConceptAdd() {
 }
 
 
+function cmdConceptPromote() {
+  const conceptId = cleanArgs[2];
+  const phaseIdx = cleanArgs.indexOf("--phase");
+
+  if (!conceptId || phaseIdx === -1) {
+    console.error("usage: lat-rev concept promote <id> --phase <extracted|specified|audited>");
+    process.exit(1);
+  }
+
+  const phase = cleanArgs[phaseIdx + 1];
+  if (!phase || !VALID_PHASES.includes(phase as Phase)) {
+    console.error(`error: --phase must be one of: ${VALID_PHASES.join(", ")}`);
+    process.exit(1);
+  }
+
+  const state = readState();
+  const concept = state.concepts[conceptId];
+  if (!concept) {
+    console.error(`error: concept "${conceptId}" not found`);
+    process.exit(1);
+  }
+
+  const currentIdx = VALID_PHASES.indexOf(concept.phase);
+  const newIdx = VALID_PHASES.indexOf(phase as Phase);
+  if (newIdx !== currentIdx + 1) {
+    console.error(`error: cannot promote from ${concept.phase} to ${phase}. Must advance one step at a time: ${VALID_PHASES.slice(currentIdx + 1).join(" → ")}`);
+    process.exit(1);
+  }
+
+  concept.phase = phase as Phase;
+  writeStateAtomic(state);
+
+  output({ ok: true, id: conceptId, phase: concept.phase });
+}
+
 // ---- Dispatch ----
 
 const command = cleanArgs[0];
@@ -391,8 +426,10 @@ switch (command) {
       cmdConceptEdge();
     } else if (sub === 'add') {
       cmdConceptAdd();
+    } else if (sub === 'promote') {
+      cmdConceptPromote();
     } else {
-      console.error('usage: lat-rev concept <edge|add> ...');
+      console.error('usage: lat-rev concept <add|edge|promote> ...');
       process.exit(1);
     }
     break;
@@ -412,6 +449,7 @@ switch (command) {
 Usage:
   lat-rev init [--src-dir <path>] [--force]
   lat-rev concept add <id> --name <name> --files <f1,f2,...>
+  lat-rev concept promote <id> --phase <extracted|specified|audited>
   lat-rev concept edge <id> <edge_type> <target_id>
   lat-rev status [<concept_id>]
   lat-rev drift [<concept_id>]

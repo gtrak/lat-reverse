@@ -39,4 +39,4 @@ Enforce unique IDs. Disambiguate when two scopes produce candidates with the sam
 
 ## Output
 
-Return the candidate list as text in your final message. The orchestrator will write them to `state.json` after user approval and run `bun run .lat-reverse/bin/lat-rev.ts concept edge` for any relationships.
+Return the candidate list as text in your final message. The orchestrator will add each via `bun run .lat-reverse/bin/lat-rev.ts concept add` and run `bun run .lat-reverse/bin/lat-rev.ts concept edge` for any relationships.

@@ -15,4 +15,4 @@ Enforce unique IDs — check `state.json` for collisions.
 
 ## Output
 
-Return the candidate as text in your final message. The orchestrator will write it to `state.json` after user approval.
+Return the candidate as text in your final message. The orchestrator will add it via `bun run .lat-reverse/bin/lat-rev.ts concept add`.

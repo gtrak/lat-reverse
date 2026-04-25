@@ -41,6 +41,7 @@ State is in `.lat-reverse/state.json`. CLI is at `.lat-reverse/bin/lat-rev.ts` (
 
 ```
 lat-rev concept add <id> --name <name> --files <f1,f2,...>
+lat-rev concept promote <id> --phase <extracted|specified|audited>
 lat-rev concept edge <id> <edge_type> <target_id>
 lat-rev status [<concept_id>]
 lat-rev drift [<concept_id>]
