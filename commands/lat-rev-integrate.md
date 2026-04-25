@@ -26,16 +26,18 @@ Run `lat locate <concept_name> --dir <source_repo>` for name-based match against
 
 If embedding DB is configured, run `lat search "<concept purpose>" --dir <source_repo>` for semantic match.
 
-### Layer 3: Explore subagent
+### Layer 3: Explore subagent (Task tool)
 
-For any matches found in layers 1-2, launch an explore subagent to:
+For any matches found in layers 1-2, use the `Task` tool with `subagent_type: "explore"` to:
 - Read the matched sections from `lat.md/`.
 - Compare claims against the new spec.
-- Produce a report: which claims match, which diverge, which are missing from each side.
+- Return a report: which claims match, which diverge, which are missing from each side.
+
+Do NOT read lat.md/ files yourself — delegate to the explore subagent.
 
 ### Resolution
 
-If layers disagree or the explore subagent finds partial overlap, highlight the inconsistency. Output the overlap report as normal text. Then use the `question` tool with a concise question like "How to resolve overlap on <concept>?" and options like `Use new spec` / `Keep existing` / `I'll decide manually`. **No auto-merge** — always present both versions and let the user decide how to resolve.
+If layers disagree or the explore subagent finds partial overlap, output the overlap report as normal text. Then use the `question` tool with a concise question like "How to resolve overlap on <concept>?" and options like `Use new spec` / `Keep existing` / `I'll decide manually`. **No auto-merge** — always present both versions and let the user decide how to resolve.
 
 ## Write to lat.md/
 
