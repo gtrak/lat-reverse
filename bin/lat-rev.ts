@@ -448,6 +448,40 @@ function cmdConceptReset() {
   output({ ok: true, id: conceptId, phase: concept.phase });
 }
 
+function cmdConceptShow() {
+  const conceptId = cleanArgs[2];
+
+  if (!conceptId) {
+    console.error("usage: lat-rev concept show <id>");
+    process.exit(1);
+  }
+
+  const state = readState();
+  const concept = state.concepts[conceptId];
+  if (!concept) {
+    console.error(`error: concept "${conceptId}" not found`);
+    process.exit(1);
+  }
+
+  const head = gitHead(state.source_repo);
+  const isStale = head && concept.source_sha && head !== concept.source_sha;
+  const changedFiles =
+    isStale && concept.source_files.length > 0
+      ? gitChangedFiles(state.source_repo, concept.source_sha, head!, concept.source_files)
+      : [];
+
+  output({
+    id: conceptId,
+    name: concept.name,
+    phase: concept.phase,
+    source_files: concept.source_files,
+    edges: concept.edges,
+    source_sha: concept.source_sha,
+    stale: !!isStale,
+    changed_files: changedFiles,
+  });
+}
+
 // ---- Dispatch ----
 
 const command = cleanArgs[0];
@@ -466,8 +500,10 @@ switch (command) {
       cmdConceptPromote();
     } else if (sub === 'reset') {
       cmdConceptReset();
+    } else if (sub === 'show') {
+      cmdConceptShow();
     } else {
-      console.error('usage: lat-rev concept <add|edge|promote|reset> ...');
+      console.error('usage: lat-rev concept <add|edge|promote|reset|show> ...');
       process.exit(1);
     }
     break;
@@ -489,6 +525,7 @@ Usage:
   lat-rev concept add <id> --name <name> --files <f1,f2,...>
   lat-rev concept promote <id> --phase <extracted|specified|audited>
   lat-rev concept reset <id>
+  lat-rev concept show <id>
   lat-rev concept edge <id> <edge_type> <target_id>
   lat-rev status [<concept_id>]
   lat-rev drift [<concept_id>]
