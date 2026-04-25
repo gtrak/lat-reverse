@@ -1,6 +1,6 @@
 # lat-reverse
 
-Reconstruct invariant-driven specifications from an existing codebase. Decomposes code into concept graphs and produces [lat.md](https://github.com/anomalyco/lat)-compatible documentation that survives full rewrites.
+Reconstruct invariant-driven specifications from an existing codebase. Decomposes code into concept graphs and produces [lat.md](https://lat.md)-compatible documentation that survives full rewrites.
 
 ## What it does
 
